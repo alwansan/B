@@ -1,5 +1,6 @@
 import os
 import subprocess
+import shutil
 
 # ==========================================
 # إعدادات المشروع
@@ -7,7 +8,9 @@ import subprocess
 PROJECT_NAME = "B-Browser"
 PACKAGE_NAME = "com.alwansan.b"
 REPO_URL = "https://github.com/alwansan/B"
-GECKO_VERSION = "121.+" 
+
+# 🔥 نستخدم نسخة مستقرة معروفة لتجنب أخطاء "Val cannot be reassigned" 🔥
+GECKO_VERSION = "108.0.20221104105437" 
 
 # تعريف المسارات
 BASE_DIR = os.getcwd()
@@ -18,6 +21,7 @@ RES_DIR = os.path.join(SRC_MAIN, "res")
 DRAWABLE_DIR = os.path.join(RES_DIR, "drawable")
 LAYOUT_DIR = os.path.join(RES_DIR, "layout")
 VALUES_DIR = os.path.join(RES_DIR, "values")
+KEYSTORE_PATH = os.path.join(APP_DIR, "debug.keystore") # مكان المفتاح
 
 # ==========================================
 # دالة مساعدة
@@ -31,10 +35,38 @@ def create_file(path, content):
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
 
 # ==========================================
+# ⚡ دالة توليد مفتاح التوقيع (Keystore)
+# ==========================================
+def generate_keystore():
+    print("🔑 جاري توليد مفتاح التوقيع (Keystore)...")
+    if os.path.exists(KEYSTORE_PATH):
+        print("ℹ️ المفتاح موجود مسبقاً.")
+        return
+
+    # أمر إنشاء المفتاح باستخدام keytool (يأتي مع Java)
+    cmd = [
+        "keytool", "-genkey", "-v", 
+        "-keystore", KEYSTORE_PATH, 
+        "-storepass", "android", 
+        "-alias", "androiddebugkey", 
+        "-keypass", "android", 
+        "-keyalg", "RSA", 
+        "-keysize", "2048", 
+        "-validity", "10000",
+        "-dname", "CN=Android Debug,O=Android,C=US"
+    ]
+    
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print("✅ تم إنشاء debug.keystore بنجاح!")
+    except Exception as e:
+        print(f"⚠️ تحذير: لم نتمكن من إنشاء Keystore تلقائياً ({e}).")
+        print("سيعتمد البناء على المفتاح الافتراضي (قد يفشل التوقيع المخصص).")
+
+# ==========================================
 # 1. ملفات التصميم (UI) - واجهة عصرية وسوداء
 # ==========================================
 
-# الألوان (Dark Theme)
 colors_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -46,7 +78,6 @@ colors_xml = """
 </resources>
 """
 
-# خلفية شريط العنوان (حواف دائرية وشفافية)
 bg_search_bar_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
@@ -56,7 +87,6 @@ bg_search_bar_xml = """
 </shape>
 """
 
-# أيقونة التطبيق (B شعار)
 ic_launcher_xml = """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -69,7 +99,6 @@ ic_launcher_xml = """
 </vector>
 """
 
-# تصميم الواجهة الرئيسي (حديث وعائم)
 activity_main_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -77,13 +106,11 @@ activity_main_xml = """
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- المتصفح يملأ الشاشة -->
     <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- شريط التحكم العائم في الأسفل -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -95,7 +122,6 @@ activity_main_xml = """
         android:orientation="horizontal"
         android:padding="8dp">
 
-        <!-- حقل إدخال الرابط -->
         <EditText
             android:id="@+id/url_input"
             android:layout_width="0dp"
@@ -111,7 +137,6 @@ activity_main_xml = """
             android:textColorHint="#88FFFFFF"
             android:textSize="14sp" />
 
-        <!-- زر الذهاب -->
         <Button
             android:id="@+id/btn_go"
             android:layout_width="60dp"
@@ -122,12 +147,11 @@ activity_main_xml = """
             android:textStyle="bold" />
 
     </LinearLayout>
-
 </RelativeLayout>
 """
 
 # ==========================================
-# 2. ملفات البناء (Gradle) - مع التوقيع التلقائي ✅
+# 2. ملفات البناء (Gradle)
 # ==========================================
 
 settings_gradle = """
@@ -170,9 +194,10 @@ app/build/
 local.properties
 .idea/
 .DS_Store
+*.iml
 """
 
-# 🔥 التعديل الهام: إضافة signingConfig ليتم توقيع التطبيق تلقائياً 🔥
+# 🔥 تم ربط ملف debug.keystore هنا 🔥
 build_gradle_app = f"""
 plugins {{
     id("com.android.application")
@@ -187,13 +212,13 @@ android {{
         applicationId = "{PACKAGE_NAME}"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0-Desktop"
+        versionCode = 3
+        versionName = "3.0-Stable-PC"
     }}
 
-    // إعدادات التوقيع (نستخدم مفتاح debug للسهولة)
     signingConfigs {{
         create("release") {{
+            // نستخدم المفتاح الذي سيتم توليده بواسطة السكربت
             storeFile = file("debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
@@ -204,7 +229,7 @@ android {{
     buildTypes {{
         release {{
             isMinifyEnabled = true
-            signingConfig = signingConfigs.getByName("debug") // استخدم مفتاح debug للتوقيع
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }}
     }}
@@ -220,7 +245,8 @@ android {{
 dependencies {{
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0") // للتصميم الحديث
+    implementation("com.google.android.material:material:1.11.0")
+    // استخدام نسخة مستقرة 108 لحل مشكلة Val cannot be reassigned
     implementation("org.mozilla.geckoview:geckoview:{GECKO_VERSION}")
 }}
 """
@@ -262,7 +288,7 @@ backup_rules = """<?xml version="1.0" encoding="utf-8"?><full-backup-content />"
 data_extraction = """<?xml version="1.0" encoding="utf-8"?><data-extraction-rules />"""
 
 # ==========================================
-# 3. كود Kotlin (مع إجبار وضع الكمبيوتر) 💻
+# 3. كود Kotlin (نسخة تعمل مع API المستقر)
 # ==========================================
 
 main_activity = f"""
@@ -290,38 +316,34 @@ class MainActivity : AppCompatActivity() {{
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // ربط الواجهة
         geckoView = findViewById(R.id.gecko_view)
         urlInput = findViewById(R.id.url_input)
         btnGo = findViewById(R.id.btn_go)
 
-        // إعداد المحرك
         geckoRuntime = GeckoRuntime.create(this)
         
-        // إعدادات الجلسة (السر هنا!)
+        // إعدادات الجلسة - الآن ستعمل لأننا نستخدم نسخة API تدعم التعديل
         val settings = GeckoSessionSettings()
         
-        // 1. إجبار وضع سطح المكتب (الشاشة العريضة)
+        // 1. إجبار وضع سطح المكتب
         settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
         settings.usePrivateMode = false
         settings.displayMode = GeckoSessionSettings.DISPLAY_MODE_BROWSER
         
-        // 2. تزوير الهوية لتكون Windows 10 Chrome (لأنه الأكثر قبولاً)
-        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        // 2. تزوير الهوية (PC User Agent) - نسخة Windows Chrome قوية
+        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
 
         geckoSession = GeckoSession(settings)
         geckoSession.open(geckoRuntime)
         geckoView.setSession(geckoSession)
 
-        // تحميل الصفحة الافتراضية
+        // تحميل Matecat للتجربة
         geckoSession.loadUri("https://www.matecat.com/") 
 
-        // برمجة زر الذهاب
         btnGo.setOnClickListener {{
             loadUrlFromInput()
         }}
 
-        // برمجة زر Enter في الكيبورد
         urlInput.setOnEditorActionListener {{ _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {{
                 loadUrlFromInput()
@@ -339,12 +361,10 @@ class MainActivity : AppCompatActivity() {{
                 url = "https://$url"
             }}
             geckoSession.loadUri(url)
-            // إخفاء الكيبورد (اختياري، يمكن إضافته لاحقاً)
         }}
     }}
 
     override fun onBackPressed() {{
-        // دعم زر الرجوع داخل المتصفح
         super.onBackPressed()
     }}
 }}
@@ -376,8 +396,7 @@ jobs:
       with:
         gradle-version: '8.5'
     
-    # هذه الخطوة مهمة: بناء نسخة موقعة بمفتاح debug
-    - name: Build APK
+    - name: Build APK (Release)
       run: gradle assembleRelease
       
     - name: Upload APK
@@ -390,7 +409,7 @@ jobs:
 # ==========================================
 # التنفيذ
 # ==========================================
-print("🚀 بدء بناء النسخة الاحترافية (B-Browser PC Edition)...")
+print("🚀 بدء بناء النسخة المستقرة (B-Browser Stable PC)...")
 
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
@@ -401,7 +420,6 @@ create_file("app/src/main/AndroidManifest.xml", manifest)
 create_file("app/src/main/res/xml/backup_rules.xml", backup_rules)
 create_file("app/src/main/res/xml/data_extraction_rules.xml", data_extraction)
 
-# ملفات التصميم الجديدة
 os.makedirs(VALUES_DIR, exist_ok=True)
 create_file(os.path.join(VALUES_DIR, "colors.xml"), colors_xml)
 
@@ -409,7 +427,6 @@ os.makedirs(DRAWABLE_DIR, exist_ok=True)
 create_file(os.path.join(DRAWABLE_DIR, "ic_launcher.xml"), ic_launcher_xml)
 create_file(os.path.join(DRAWABLE_DIR, "bg_search_bar.xml"), bg_search_bar_xml)
 
-# ملف الواجهة المعدل
 os.makedirs(LAYOUT_DIR, exist_ok=True)
 create_file(os.path.join(LAYOUT_DIR, "activity_main.xml"), activity_main_xml)
 
@@ -417,7 +434,10 @@ os.makedirs(JAVA_DIR, exist_ok=True)
 create_file(os.path.join(JAVA_DIR, "MainActivity.kt"), main_activity)
 create_file(".github/workflows/build.yml", github_workflow)
 
-print("✅ تم تجهيز الملفات (توقيع تلقائي + وضع PC + تصميم أسود).")
+# 🔥 توليد المفتاح قبل الرفع 🔥
+generate_keystore()
+
+print("✅ تم تجهيز الملفات (تم حل مشكلة التوقيع + مشكلة Val Error).")
 print("🔄 جاري إعداد Git والرفع...")
 
 try:
@@ -431,7 +451,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Upgrade: PC Mode, Dark UI, Auto-Sign"], check=False)
+    subprocess.run(["git", "commit", "-m", "Fix: Stable GeckoView, Auto-Keystore, PC Mode"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -439,7 +459,7 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ تم التحديث! التطبيق القادم سيكون أسطورياً.")
+    print("\n✅✅ تم التحديث! تابع البناء هنا:")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:

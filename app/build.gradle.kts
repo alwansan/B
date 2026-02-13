@@ -11,13 +11,12 @@ android {
         applicationId = "com.alwansan.b"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "3.0-Stable-PC"
+        versionCode = 4
+        versionName = "4.0-Stable-PC"
     }
 
     signingConfigs {
         create("release") {
-            // نستخدم المفتاح الذي سيتم توليده بواسطة السكربت
             storeFile = file("debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
@@ -45,6 +44,6 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
-    // استخدام نسخة مستقرة 108 لحل مشكلة Val cannot be reassigned
-    implementation("org.mozilla.geckoview:geckoview:108.0.20221104105437")
+    // استخدام النسخة 109.0.1 المستقرة والموجودة
+    implementation("org.mozilla.geckoview:geckoview:109.0.1")
 }

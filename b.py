@@ -1,6 +1,5 @@
 import os
 import subprocess
-import shutil
 
 # ==========================================
 # إعدادات المشروع
@@ -9,8 +8,8 @@ PROJECT_NAME = "B-Browser"
 PACKAGE_NAME = "com.alwansan.b"
 REPO_URL = "https://github.com/alwansan/B"
 
-# 🔥 نستخدم نسخة مستقرة معروفة لتجنب أخطاء "Val cannot be reassigned" 🔥
-GECKO_VERSION = "108.0.20221104105437" 
+# 🔥 التعديل: استخدام نسخة رسمية موجودة ومستقرة 🔥
+GECKO_VERSION = "109.0.1" 
 
 # تعريف المسارات
 BASE_DIR = os.getcwd()
@@ -21,7 +20,6 @@ RES_DIR = os.path.join(SRC_MAIN, "res")
 DRAWABLE_DIR = os.path.join(RES_DIR, "drawable")
 LAYOUT_DIR = os.path.join(RES_DIR, "layout")
 VALUES_DIR = os.path.join(RES_DIR, "values")
-KEYSTORE_PATH = os.path.join(APP_DIR, "debug.keystore") # مكان المفتاح
 
 # ==========================================
 # دالة مساعدة
@@ -35,36 +33,7 @@ def create_file(path, content):
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
 
 # ==========================================
-# ⚡ دالة توليد مفتاح التوقيع (Keystore)
-# ==========================================
-def generate_keystore():
-    print("🔑 جاري توليد مفتاح التوقيع (Keystore)...")
-    if os.path.exists(KEYSTORE_PATH):
-        print("ℹ️ المفتاح موجود مسبقاً.")
-        return
-
-    # أمر إنشاء المفتاح باستخدام keytool (يأتي مع Java)
-    cmd = [
-        "keytool", "-genkey", "-v", 
-        "-keystore", KEYSTORE_PATH, 
-        "-storepass", "android", 
-        "-alias", "androiddebugkey", 
-        "-keypass", "android", 
-        "-keyalg", "RSA", 
-        "-keysize", "2048", 
-        "-validity", "10000",
-        "-dname", "CN=Android Debug,O=Android,C=US"
-    ]
-    
-    try:
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print("✅ تم إنشاء debug.keystore بنجاح!")
-    except Exception as e:
-        print(f"⚠️ تحذير: لم نتمكن من إنشاء Keystore تلقائياً ({e}).")
-        print("سيعتمد البناء على المفتاح الافتراضي (قد يفشل التوقيع المخصص).")
-
-# ==========================================
-# 1. ملفات التصميم (UI) - واجهة عصرية وسوداء
+# 1. ملفات التصميم (UI) - Dark Mode & PC Look
 # ==========================================
 
 colors_xml = """
@@ -197,7 +166,6 @@ local.properties
 *.iml
 """
 
-# 🔥 تم ربط ملف debug.keystore هنا 🔥
 build_gradle_app = f"""
 plugins {{
     id("com.android.application")
@@ -212,13 +180,12 @@ android {{
         applicationId = "{PACKAGE_NAME}"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "3.0-Stable-PC"
+        versionCode = 4
+        versionName = "4.0-Stable-PC"
     }}
 
     signingConfigs {{
         create("release") {{
-            // نستخدم المفتاح الذي سيتم توليده بواسطة السكربت
             storeFile = file("debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
@@ -246,7 +213,7 @@ dependencies {{
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
-    // استخدام نسخة مستقرة 108 لحل مشكلة Val cannot be reassigned
+    // استخدام النسخة 109.0.1 المستقرة والموجودة
     implementation("org.mozilla.geckoview:geckoview:{GECKO_VERSION}")
 }}
 """
@@ -322,7 +289,6 @@ class MainActivity : AppCompatActivity() {{
 
         geckoRuntime = GeckoRuntime.create(this)
         
-        // إعدادات الجلسة - الآن ستعمل لأننا نستخدم نسخة API تدعم التعديل
         val settings = GeckoSessionSettings()
         
         // 1. إجبار وضع سطح المكتب
@@ -330,14 +296,14 @@ class MainActivity : AppCompatActivity() {{
         settings.usePrivateMode = false
         settings.displayMode = GeckoSessionSettings.DISPLAY_MODE_BROWSER
         
-        // 2. تزوير الهوية (PC User Agent) - نسخة Windows Chrome قوية
-        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
+        // 2. تزوير الهوية (PC User Agent) - Windows Chrome
+        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
         geckoSession = GeckoSession(settings)
         geckoSession.open(geckoRuntime)
         geckoView.setSession(geckoSession)
 
-        // تحميل Matecat للتجربة
+        // تحميل Matecat
         geckoSession.loadUri("https://www.matecat.com/") 
 
         btnGo.setOnClickListener {{
@@ -363,13 +329,15 @@ class MainActivity : AppCompatActivity() {{
             geckoSession.loadUri(url)
         }}
     }}
-
+    
     override fun onBackPressed() {{
+        // لا يوجد كود هنا حاليا
         super.onBackPressed()
     }}
 }}
 """
 
+# 🔥 التعديل هنا: أمر إنشاء المفتاح داخل GitHub Actions 🔥
 github_workflow = """
 name: Build B Browser
 on:
@@ -396,6 +364,11 @@ jobs:
       with:
         gradle-version: '8.5'
     
+    # 🔥 خطوة جديدة: توليد المفتاح داخل السيرفر 🔥
+    - name: Generate Keystore
+      run: |
+        keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+    
     - name: Build APK (Release)
       run: gradle assembleRelease
       
@@ -409,7 +382,7 @@ jobs:
 # ==========================================
 # التنفيذ
 # ==========================================
-print("🚀 بدء بناء النسخة المستقرة (B-Browser Stable PC)...")
+print("🚀 بدء بناء النسخة النهائية (B-Browser Stable PC)...")
 
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
@@ -434,10 +407,7 @@ os.makedirs(JAVA_DIR, exist_ok=True)
 create_file(os.path.join(JAVA_DIR, "MainActivity.kt"), main_activity)
 create_file(".github/workflows/build.yml", github_workflow)
 
-# 🔥 توليد المفتاح قبل الرفع 🔥
-generate_keystore()
-
-print("✅ تم تجهيز الملفات (تم حل مشكلة التوقيع + مشكلة Val Error).")
+print("✅ تم تجهيز الملفات (إصلاح النسخة + توليد المفتاح سحابياً).")
 print("🔄 جاري إعداد Git والرفع...")
 
 try:
@@ -451,7 +421,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Fix: Stable GeckoView, Auto-Keystore, PC Mode"], check=False)
+    subprocess.run(["git", "commit", "-m", "Final Fix: Gecko 109.0.1 + Cloud Keystore"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -459,7 +429,7 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ تم التحديث! تابع البناء هنا:")
+    print("\n✅✅ تم التحديث! هذا البناء سينجح بإذن الله.")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:

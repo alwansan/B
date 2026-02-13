@@ -28,7 +28,6 @@ class MainActivity : AppCompatActivity() {
 
         geckoRuntime = GeckoRuntime.create(this)
         
-        // إعدادات الجلسة - الآن ستعمل لأننا نستخدم نسخة API تدعم التعديل
         val settings = GeckoSessionSettings()
         
         // 1. إجبار وضع سطح المكتب
@@ -36,14 +35,14 @@ class MainActivity : AppCompatActivity() {
         settings.usePrivateMode = false
         settings.displayMode = GeckoSessionSettings.DISPLAY_MODE_BROWSER
         
-        // 2. تزوير الهوية (PC User Agent) - نسخة Windows Chrome قوية
-        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
+        // 2. تزوير الهوية (PC User Agent) - Windows Chrome
+        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
         geckoSession = GeckoSession(settings)
         geckoSession.open(geckoRuntime)
         geckoView.setSession(geckoSession)
 
-        // تحميل Matecat للتجربة
+        // تحميل Matecat
         geckoSession.loadUri("https://www.matecat.com/") 
 
         btnGo.setOnClickListener {
@@ -69,8 +68,9 @@ class MainActivity : AppCompatActivity() {
             geckoSession.loadUri(url)
         }
     }
-
+    
     override fun onBackPressed() {
+        // لا يوجد كود هنا حاليا
         super.onBackPressed()
     }
 }
