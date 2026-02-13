@@ -7,7 +7,8 @@ import subprocess
 PROJECT_NAME = "B-Browser"
 PACKAGE_NAME = "com.alwansan.b"
 REPO_URL = "https://github.com/alwansan/B"
-GECKO_VERSION = "121.0.20240213" 
+# 🔥 التعديل هنا: استخدام نسخة مستقرة وموجودة 100% 🔥
+GECKO_VERSION = "121.0.1" 
 
 # تعريف المسارات
 BASE_DIR = os.getcwd()
@@ -42,6 +43,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // رابط مستودع موزيلا الرسمي
         maven { url = uri("https://maven.mozilla.org/maven2/") }
     }
 }
@@ -107,6 +109,7 @@ android {{
 dependencies {{
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
+    // المكتبة المستقرة
     implementation("org.mozilla.geckoview:geckoview:{GECKO_VERSION}")
 }}
 """
@@ -180,6 +183,7 @@ class MainActivity : AppCompatActivity() {{
         geckoSession = GeckoSession()
         
         val settings = geckoSession.settings
+        // تزوير الهوية لتظهر كويندوز
         settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
         settings.usePrivateMode = false 
         settings.displayMode = GeckoSession.Settings.DISPLAY_MODE_BROWSER
@@ -191,9 +195,6 @@ class MainActivity : AppCompatActivity() {{
 }}
 """
 
-# ==========================================
-# التعديل الهام هنا 👇 (تثبيت نسخة Gradle)
-# ==========================================
 github_workflow = """
 name: Build B Browser
 on:
@@ -215,7 +216,6 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       
-    # 🔥 هنا الحل: نجبر السيرفر يستخدم Gradle 8.5 المستقرة 🔥
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
@@ -266,7 +266,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Fix: Force Gradle 8.5 for compatibility"], check=False)
+    subprocess.run(["git", "commit", "-m", "Fix: Use stable GeckoView version"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -274,7 +274,7 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ تم التحديث! اذهب للتحقق من البناء الآن.")
+    print("\n✅✅ تم التحديث! هذه المرة ستنجح بإذن الله.")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:

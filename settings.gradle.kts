@@ -10,7 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // رابط مستودع موزيلا الرسمي
+        // مستودع موزيلا الرسمي
         maven { url = uri("https://maven.mozilla.org/maven2/") }
     }
 }
