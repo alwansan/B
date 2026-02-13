@@ -22,12 +22,13 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: '8.5'
-        
+    
+    # هذه الخطوة مهمة: بناء نسخة موقعة بمفتاح debug
     - name: Build APK
       run: gradle assembleRelease
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: B-Browser-APK
+        name: B-Browser-PC-Edition
         path: app/build/outputs/apk/release/*.apk
