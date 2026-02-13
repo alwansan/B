@@ -22,38 +22,34 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // ربط الواجهة
         geckoView = findViewById(R.id.gecko_view)
         urlInput = findViewById(R.id.url_input)
         btnGo = findViewById(R.id.btn_go)
 
-        // إعداد المحرك
         geckoRuntime = GeckoRuntime.create(this)
         
-        // إعدادات الجلسة (السر هنا!)
+        // إعدادات الجلسة - الآن ستعمل لأننا نستخدم نسخة API تدعم التعديل
         val settings = GeckoSessionSettings()
         
-        // 1. إجبار وضع سطح المكتب (الشاشة العريضة)
+        // 1. إجبار وضع سطح المكتب
         settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
         settings.usePrivateMode = false
         settings.displayMode = GeckoSessionSettings.DISPLAY_MODE_BROWSER
         
-        // 2. تزوير الهوية لتكون Windows 10 Chrome (لأنه الأكثر قبولاً)
-        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        // 2. تزوير الهوية (PC User Agent) - نسخة Windows Chrome قوية
+        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
 
         geckoSession = GeckoSession(settings)
         geckoSession.open(geckoRuntime)
         geckoView.setSession(geckoSession)
 
-        // تحميل الصفحة الافتراضية
+        // تحميل Matecat للتجربة
         geckoSession.loadUri("https://www.matecat.com/") 
 
-        // برمجة زر الذهاب
         btnGo.setOnClickListener {
             loadUrlFromInput()
         }
 
-        // برمجة زر Enter في الكيبورد
         urlInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
                 loadUrlFromInput()
@@ -71,12 +67,10 @@ class MainActivity : AppCompatActivity() {
                 url = "https://$url"
             }
             geckoSession.loadUri(url)
-            // إخفاء الكيبورد (اختياري، يمكن إضافته لاحقاً)
         }
     }
 
     override fun onBackPressed() {
-        // دعم زر الرجوع داخل المتصفح
         super.onBackPressed()
     }
 }

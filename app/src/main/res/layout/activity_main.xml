@@ -4,13 +4,11 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- المتصفح يملأ الشاشة -->
     <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- شريط التحكم العائم في الأسفل -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,7 +20,6 @@
         android:orientation="horizontal"
         android:padding="8dp">
 
-        <!-- حقل إدخال الرابط -->
         <EditText
             android:id="@+id/url_input"
             android:layout_width="0dp"
@@ -38,7 +35,6 @@
             android:textColorHint="#88FFFFFF"
             android:textSize="14sp" />
 
-        <!-- زر الذهاب -->
         <Button
             android:id="@+id/btn_go"
             android:layout_width="60dp"
@@ -49,5 +45,4 @@
             android:textStyle="bold" />
 
     </LinearLayout>
-
 </RelativeLayout>

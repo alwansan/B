@@ -11,13 +11,13 @@ android {
         applicationId = "com.alwansan.b"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0-Desktop"
+        versionCode = 3
+        versionName = "3.0-Stable-PC"
     }
 
-    // إعدادات التوقيع (نستخدم مفتاح debug للسهولة)
     signingConfigs {
         create("release") {
+            // نستخدم المفتاح الذي سيتم توليده بواسطة السكربت
             storeFile = file("debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
@@ -28,7 +28,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-            signingConfig = signingConfigs.getByName("debug") // استخدم مفتاح debug للتوقيع
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -44,6 +44,7 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0") // للتصميم الحديث
-    implementation("org.mozilla.geckoview:geckoview:121.+")
+    implementation("com.google.android.material:material:1.11.0")
+    // استخدام نسخة مستقرة 108 لحل مشكلة Val cannot be reassigned
+    implementation("org.mozilla.geckoview:geckoview:108.0.20221104105437")
 }

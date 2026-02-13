@@ -23,8 +23,7 @@ jobs:
       with:
         gradle-version: '8.5'
     
-    # هذه الخطوة مهمة: بناء نسخة موقعة بمفتاح debug
-    - name: Build APK
+    - name: Build APK (Release)
       run: gradle assembleRelease
       
     - name: Upload APK
