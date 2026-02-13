@@ -11,10 +11,11 @@ android {
         applicationId = "com.alwansan.b"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "4.0-Stable-PC"
+        versionCode = 6
+        versionName = "6.0-PC-Edition"
     }
 
+    // إعدادات التوقيع ليتم التعرف عليها
     signingConfigs {
         create("release") {
             storeFile = file("debug.keystore")
@@ -26,7 +27,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -43,7 +44,6 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    // استخدام النسخة 109.0.1 المستقرة والموجودة
-    implementation("org.mozilla.geckoview:geckoview:109.0.1")
+    // 🔥 النسخة الديناميكية 🔥
+    implementation("org.mozilla.geckoview:geckoview:121.+")
 }

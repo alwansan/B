@@ -10,6 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // 🔥 هذا السطر هو سر نجاح تحميل المكتبة 🔥
         maven { url = uri("https://maven.mozilla.org/maven2/") }
     }
 }

@@ -1,48 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.mozilla.geckoview.GeckoView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/gecko_view"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#000000">
-
-    <org.mozilla.geckoview.GeckoView
-        android:id="@+id/gecko_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="16dp"
-        android:background="@drawable/bg_search_bar"
-        android:elevation="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <EditText
-            android:id="@+id/url_input"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:background="@null"
-            android:hint="Type URL..."
-            android:imeOptions="actionGo"
-            android:inputType="textUri"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/white"
-            android:textColorHint="#88FFFFFF"
-            android:textSize="14sp" />
-
-        <Button
-            android:id="@+id/btn_go"
-            android:layout_width="60dp"
-            android:layout_height="40dp"
-            android:backgroundTint="@color/neon_blue"
-            android:text="GO"
-            android:textColor="#000000"
-            android:textStyle="bold" />
-
-    </LinearLayout>
-</RelativeLayout>
+    android:layout_height="match_parent" />

@@ -14,6 +14,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: gradle
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -23,16 +24,20 @@ jobs:
       with:
         gradle-version: '8.5'
     
-    # 🔥 خطوة جديدة: توليد المفتاح داخل السيرفر 🔥
+    # 🔥 توليد مفتاح التوقيع في السحابة 🔥
     - name: Generate Keystore
       run: |
         keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
     
+    - name: Clean Build
+      run: gradle clean
+      
+    # استخدام gradle assembleRelease مباشرة لتجنب مشاكل الصلاحيات
     - name: Build APK (Release)
-      run: gradle assembleRelease
+      run: gradle assembleRelease --stacktrace
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: B-Browser-PC-Edition
+        name: B-Browser-PC
         path: app/build/outputs/apk/release/*.apk
