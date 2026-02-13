@@ -7,8 +7,8 @@ import subprocess
 PROJECT_NAME = "B-Browser"
 PACKAGE_NAME = "com.alwansan.b"
 REPO_URL = "https://github.com/alwansan/B"
-# 🔥 التعديل هنا: استخدام نسخة مستقرة وموجودة 100% 🔥
-GECKO_VERSION = "121.0.1" 
+# 🔥 التعديل هنا: استخدام الرقم الطويل الإلزامي من موزيلا 🔥
+GECKO_VERSION = "123.0.20240213220735" 
 
 # تعريف المسارات
 BASE_DIR = os.getcwd()
@@ -43,7 +43,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // رابط مستودع موزيلا الرسمي
+        // مستودع موزيلا الرسمي
         maven { url = uri("https://maven.mozilla.org/maven2/") }
     }
 }
@@ -109,7 +109,7 @@ android {{
 dependencies {{
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    // المكتبة المستقرة
+    // مكتبة المتصفح بالنسخة الصحيحة
     implementation("org.mozilla.geckoview:geckoview:{GECKO_VERSION}")
 }}
 """
@@ -183,8 +183,8 @@ class MainActivity : AppCompatActivity() {{
         geckoSession = GeckoSession()
         
         val settings = geckoSession.settings
-        // تزوير الهوية لتظهر كويندوز
-        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
+        // جعل المتصفح يظهر كـ Desktop Windows
+        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0"
         settings.usePrivateMode = false 
         settings.displayMode = GeckoSession.Settings.DISPLAY_MODE_BROWSER
         
@@ -236,7 +236,6 @@ jobs:
 # ==========================================
 print("🚀 بدء العمل...")
 
-# 1. إنشاء الملفات
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
 create_file("gradle.properties", gradle_properties)
@@ -251,8 +250,6 @@ create_file(os.path.join(JAVA_DIR, "MainActivity.kt"), main_activity)
 create_file(".github/workflows/build.yml", github_workflow)
 
 print("✅ تم بناء هيكلة الملفات.")
-
-# 2. عمليات Git
 print("🔄 جاري إعداد Git...")
 
 try:
@@ -266,7 +263,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Fix: Use stable GeckoView version"], check=False)
+    subprocess.run(["git", "commit", "-m", "Fix: Use exact GeckoView timestamp version"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -274,7 +271,7 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ تم التحديث! هذه المرة ستنجح بإذن الله.")
+    print("\n✅✅ تم التحديث! تابع البناء الآن.")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:

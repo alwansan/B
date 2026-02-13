@@ -7,8 +7,10 @@ import subprocess
 PROJECT_NAME = "B-Browser"
 PACKAGE_NAME = "com.alwansan.b"
 REPO_URL = "https://github.com/alwansan/B"
-# 🔥 التعديل هنا: استخدام الرقم الطويل الإلزامي من موزيلا 🔥
-GECKO_VERSION = "123.0.20240213220735" 
+
+# 🔥 الحل النهائي: استخدام علامة (+) لترك المهمة لـ Gradle 🔥
+# هذا يعني: حمل آخر نسخة متوفرة من إصدار 121 بدون وجع رأس التواريخ
+GECKO_VERSION = "121.+" 
 
 # تعريف المسارات
 BASE_DIR = os.getcwd()
@@ -43,7 +45,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // مستودع موزيلا الرسمي
+        // رابط موزيلا الرسمي
         maven { url = uri("https://maven.mozilla.org/maven2/") }
     }
 }
@@ -109,7 +111,8 @@ android {{
 dependencies {{
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    // مكتبة المتصفح بالنسخة الصحيحة
+    
+    // 🔥 هنا التغيير: استخدام الإصدار الديناميكي +
     implementation("org.mozilla.geckoview:geckoview:{GECKO_VERSION}")
 }}
 """
@@ -184,7 +187,7 @@ class MainActivity : AppCompatActivity() {{
         
         val settings = geckoSession.settings
         // جعل المتصفح يظهر كـ Desktop Windows
-        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0"
+        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
         settings.usePrivateMode = false 
         settings.displayMode = GeckoSession.Settings.DISPLAY_MODE_BROWSER
         
@@ -263,7 +266,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Fix: Use exact GeckoView timestamp version"], check=False)
+    subprocess.run(["git", "commit", "-m", "Fix: Use dynamic versioning (+)"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -271,7 +274,7 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ تم التحديث! تابع البناء الآن.")
+    print("\n✅✅ تم التحديث! علامة (+) ستحل المشكلة.")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:

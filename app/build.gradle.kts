@@ -33,6 +33,7 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    // مكتبة المتصفح بالنسخة الصحيحة
-    implementation("org.mozilla.geckoview:geckoview:123.0.20240213220735")
+    
+    // 🔥 هنا التغيير: استخدام الإصدار الديناميكي +
+    implementation("org.mozilla.geckoview:geckoview:121.+")
 }

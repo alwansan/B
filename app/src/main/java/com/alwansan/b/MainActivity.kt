@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         
         val settings = geckoSession.settings
         // جعل المتصفح يظهر كـ Desktop Windows
-        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0"
+        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
         settings.usePrivateMode = false 
         settings.displayMode = GeckoSession.Settings.DISPLAY_MODE_BROWSER
         
