@@ -191,6 +191,9 @@ class MainActivity : AppCompatActivity() {{
 }}
 """
 
+# ==========================================
+# التعديل الهام هنا 👇 (تثبيت نسخة Gradle)
+# ==========================================
 github_workflow = """
 name: Build B Browser
 on:
@@ -202,15 +205,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
+        
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-    - name: Build APK using Gradle
-      run: gradle assembleRelease --no-daemon
+      
+    # 🔥 هنا الحل: نجبر السيرفر يستخدم Gradle 8.5 المستقرة 🔥
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.5'
+        
+    - name: Build APK
+      run: gradle assembleRelease
+      
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
@@ -239,37 +252,30 @@ create_file(".github/workflows/build.yml", github_workflow)
 
 print("✅ تم بناء هيكلة الملفات.")
 
-# 2. عمليات Git (الإصلاح الجذري هنا)
+# 2. عمليات Git
 print("🔄 جاري إعداد Git...")
 
 try:
-    # 1. إصلاح الصلاحيات
     subprocess.run(["git", "config", "--global", "--add", "safe.directory", BASE_DIR], check=True)
-
-    # 2. تهيئة المستودع
     if not os.path.exists(".git"):
         subprocess.run(["git", "init"], check=True)
 
-    # 3. التأكد من رابط الريموت
     try:
         subprocess.run(["git", "remote", "add", "origin", REPO_URL], check=True)
     except subprocess.CalledProcessError:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
-    # 4. إضافة الملفات وحفظ التعديلات
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Auto-Build Update"], check=False)
-
-    # 5. 🔥 الخطوة الحاسمة: إجبار تسمية الفرع إلى main 🔥
-    print("🔧 توحيد اسم الفرع إلى main...")
+    subprocess.run(["git", "commit", "-m", "Fix: Force Gradle 8.5 for compatibility"], check=False)
+    
+    print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
 
-    # 6. الرفع بالقوة (لضمان تجاوز أي اختلاف في التاريخ)
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ مبروك! تم الرفع بنجاح.")
-    print(f"🔗 تابع البناء هنا: {REPO_URL}/actions")
+    print("\n✅✅ تم التحديث! اذهب للتحقق من البناء الآن.")
+    print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:
-    print(f"\n❌ خطأ أثناء العملية: {e}")
+    print(f"\n❌ خطأ: {e}")

@@ -10,20 +10,18 @@ REPO_URL = "https://github.com/alwansan/B"
 GECKO_VERSION = "121.0.20240213" 
 
 # تعريف المسارات
-BASE_DIR = os.getcwd() # سيتم استخدامه لحل مشكلة Git
+BASE_DIR = os.getcwd()
 APP_DIR = os.path.join(BASE_DIR, "app")
 SRC_MAIN = os.path.join(APP_DIR, "src", "main")
 JAVA_DIR = os.path.join(SRC_MAIN, "java", "com", "alwansan", "b")
-RES_LAYOUT = os.path.join(SRC_MAIN, "res", "layout")
 
 # ==========================================
-# دالة مساعدة لإنشاء الملفات
+# دالة مساعدة
 # ==========================================
 def create_file(path, content):
     directory = os.path.dirname(path)
     if directory:
         os.makedirs(directory, exist_ok=True)
-    
     with open(path, "w", encoding="utf-8") as f:
         f.write(content.strip())
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
@@ -31,7 +29,6 @@ def create_file(path, content):
 # ==========================================
 # محتوى الملفات
 # ==========================================
-
 settings_gradle = """
 pluginManagement {
     repositories {
@@ -224,8 +221,7 @@ jobs:
 # ==========================================
 # التنفيذ
 # ==========================================
-
-print("🚀 بدء بناء مشروع B-Browser...")
+print("🚀 بدء العمل...")
 
 # 1. إنشاء الملفات
 create_file("settings.gradle.kts", settings_gradle)
@@ -243,36 +239,37 @@ create_file(".github/workflows/build.yml", github_workflow)
 
 print("✅ تم بناء هيكلة الملفات.")
 
-# 2. عمليات Git
-print("🔄 جاري إعداد Git والرفع...")
+# 2. عمليات Git (الإصلاح الجذري هنا)
+print("🔄 جاري إعداد Git...")
 
 try:
-    # 🔴🔴 الحل لمشكلة الصلاحيات (Dubious Ownership) 🔴🔴
-    print("🔧 تطبيق استثناء الأمان للمجلد الحالي...")
+    # 1. إصلاح الصلاحيات
     subprocess.run(["git", "config", "--global", "--add", "safe.directory", BASE_DIR], check=True)
 
-    # التحقق من التهيئة
+    # 2. تهيئة المستودع
     if not os.path.exists(".git"):
         subprocess.run(["git", "init"], check=True)
-        # إعادة تسمية الفرع فوراً لتجنب المشاكل
-        subprocess.run(["git", "branch", "-M", "main"], check=True)
-        try:
-            subprocess.run(["git", "remote", "add", "origin", REPO_URL], check=True)
-        except subprocess.CalledProcessError:
-            # إذا كان الريموت موجوداً نحدثه فقط للتأكد
-            subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
-    # تنفيذ الأوامر بالترتيب
+    # 3. التأكد من رابط الريموت
+    try:
+        subprocess.run(["git", "remote", "add", "origin", REPO_URL], check=True)
+    except subprocess.CalledProcessError:
+        subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
+
+    # 4. إضافة الملفات وحفظ التعديلات
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Auto-Build Update"], check=False) # check=False لعدم التوقف إذا لم يكن هناك تغييرات
-    
-    # الرفع بقوة
+    subprocess.run(["git", "commit", "-m", "Auto-Build Update"], check=False)
+
+    # 5. 🔥 الخطوة الحاسمة: إجبار تسمية الفرع إلى main 🔥
+    print("🔧 توحيد اسم الفرع إلى main...")
+    subprocess.run(["git", "branch", "-M", "main"], check=True)
+
+    # 6. الرفع بالقوة (لضمان تجاوز أي اختلاف في التاريخ)
     print("🚀 جاري الرفع إلى GitHub...")
-    subprocess.run(["git", "push", "-u", "origin", "main"], check=True)
+    subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ تم بنجاح! راجع Actions الآن:")
-    print(f"🔗 {REPO_URL}/actions")
+    print("\n✅✅ مبروك! تم الرفع بنجاح.")
+    print(f"🔗 تابع البناء هنا: {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:
-    print(f"\n❌ خطأ في Git: {e}")
-    print("تأكد أنك قمت بتسجيل الدخول لـ Git مسبقاً.")
+    print(f"\n❌ خطأ أثناء العملية: {e}")
