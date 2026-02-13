@@ -1,6 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.mozilla.geckoview.GeckoView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/gecko_view"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <!-- المتصفح -->
+    <org.mozilla.geckoview.GeckoView
+        android:id="@+id/gecko_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- شريط التحكم العائم -->
+    <LinearLayout
+        android:id="@+id/bottom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_search_bar"
+        android:elevation="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <EditText
+            android:id="@+id/url_input"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="Search or type URL..."
+            android:textColor="@color/text_white"
+            android:textColorHint="@color/text_hint"
+            android:inputType="textUri"
+            android:imeOptions="actionGo"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textSize="14sp"
+            android:singleLine="true" />
+
+        <Button
+            android:id="@+id/btn_go"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="GO"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:backgroundTint="@color/neon_blue"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="64dp" />
+
+    </LinearLayout>
+
+</RelativeLayout>

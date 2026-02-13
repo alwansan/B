@@ -11,11 +11,10 @@ android {
         applicationId = "com.alwansan.b"
         minSdk = 26
         targetSdk = 34
-        versionCode = 6
-        versionName = "6.0-PC-Edition"
+        versionCode = 8
+        versionName = "8.0-Pro-Desktop"
     }
 
-    // إعدادات التوقيع ليتم التعرف عليها
     signingConfigs {
         create("release") {
             storeFile = file("debug.keystore")
@@ -44,6 +43,6 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    // 🔥 النسخة الديناميكية 🔥
+    implementation("com.google.android.material:material:1.11.0")
     implementation("org.mozilla.geckoview:geckoview:121.+")
 }

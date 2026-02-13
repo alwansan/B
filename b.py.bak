@@ -8,8 +8,8 @@ PROJECT_NAME = "B-Browser"
 PACKAGE_NAME = "com.alwansan.b"
 REPO_URL = "https://github.com/alwansan/B"
 
-# 🔥 التعديل: استخدام نسخة رسمية موجودة ومستقرة 🔥
-GECKO_VERSION = "109.0.1" 
+# نستخدم النسخة الديناميكية (الأحدث من سلسلة 121)
+GECKO_VERSION = "121.+" 
 
 # تعريف المسارات
 BASE_DIR = os.getcwd()
@@ -17,9 +17,7 @@ APP_DIR = os.path.join(BASE_DIR, "app")
 SRC_MAIN = os.path.join(APP_DIR, "src", "main")
 JAVA_DIR = os.path.join(SRC_MAIN, "java", "com", "alwansan", "b")
 RES_DIR = os.path.join(SRC_MAIN, "res")
-DRAWABLE_DIR = os.path.join(RES_DIR, "drawable")
-LAYOUT_DIR = os.path.join(RES_DIR, "layout")
-VALUES_DIR = os.path.join(RES_DIR, "values")
+DRAWABLE_DIR = os.path.join(RES_DIR, "drawable") # مكان الأيقونة الصحيح
 
 # ==========================================
 # دالة مساعدة
@@ -33,94 +31,24 @@ def create_file(path, content):
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
 
 # ==========================================
-# 1. ملفات التصميم (UI) - Dark Mode & PC Look
+# 1. ملفات التصميم (الأيقونة + الثيم)
 # ==========================================
 
-colors_xml = """
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="black_overlay">#CC000000</color>
-    <color name="dark_gray">#1E1E1E</color>
-    <color name="neon_blue">#00E5FF</color>
-    <color name="transparent_gray">#99121212</color>
-    <color name="white">#FFFFFF</color>
-</resources>
-"""
-
-bg_search_bar_xml = """
-<?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/transparent_gray"/>
-    <corners android:radius="20dp"/>
-    <stroke android:width="1dp" android:color="#33FFFFFF"/>
-</shape>
-"""
-
+# تصميم الأيقونة (حرف B برتقالي)
 ic_launcher_xml = """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#121212" android:pathData="M0,0h108v108h-108z"/>
-    <path android:fillColor="#00E5FF" android:pathData="M30,30h48v48h-48z"/>
-    <path android:fillColor="#FFFFFF" android:pathData="M40,40h28v28h-28z"/>
+    <path android:fillColor="#1F1F1F" android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M30,30h48v48h-48z"/>
+    <path android:fillColor="#FF5722" android:pathData="M40,40h28v28h-28z"/>
 </vector>
 """
 
-activity_main_xml = """
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#000000">
-
-    <org.mozilla.geckoview.GeckoView
-        android:id="@+id/gecko_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="16dp"
-        android:background="@drawable/bg_search_bar"
-        android:elevation="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <EditText
-            android:id="@+id/url_input"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:background="@null"
-            android:hint="Type URL..."
-            android:imeOptions="actionGo"
-            android:inputType="textUri"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/white"
-            android:textColorHint="#88FFFFFF"
-            android:textSize="14sp" />
-
-        <Button
-            android:id="@+id/btn_go"
-            android:layout_width="60dp"
-            android:layout_height="40dp"
-            android:backgroundTint="@color/neon_blue"
-            android:text="GO"
-            android:textColor="#000000"
-            android:textStyle="bold" />
-
-    </LinearLayout>
-</RelativeLayout>
-"""
-
 # ==========================================
-# 2. ملفات البناء (Gradle)
+# 2. إعدادات Gradle (مهم جداً إضافة رابط موزيلا)
 # ==========================================
 
 settings_gradle = """
@@ -136,6 +64,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // 🔥 هذا السطر هو سر نجاح تحميل المكتبة 🔥
         maven { url = uri("https://maven.mozilla.org/maven2/") }
     }
 }
@@ -163,7 +92,6 @@ app/build/
 local.properties
 .idea/
 .DS_Store
-*.iml
 """
 
 build_gradle_app = f"""
@@ -180,10 +108,11 @@ android {{
         applicationId = "{PACKAGE_NAME}"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "4.0-Stable-PC"
+        versionCode = 6
+        versionName = "6.0-PC-Edition"
     }}
 
+    // إعدادات التوقيع ليتم التعرف عليها
     signingConfigs {{
         create("release") {{
             storeFile = file("debug.keystore")
@@ -195,7 +124,7 @@ android {{
 
     buildTypes {{
         release {{
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }}
@@ -212,12 +141,14 @@ android {{
 dependencies {{
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    // استخدام النسخة 109.0.1 المستقرة والموجودة
+    // 🔥 النسخة الديناميكية 🔥
     implementation("org.mozilla.geckoview:geckoview:{GECKO_VERSION}")
 }}
 """
 
+# ==========================================
+# 3. المانيفست (تم إصلاح خطأ mipmap)
+# ==========================================
 manifest = f"""
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -230,8 +161,8 @@ manifest = f"""
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/ic_launcher"
-        android:label="B Desktop Browser"
+        android:icon="@drawable/ic_launcher" 
+        android:label="B Browser"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar"
@@ -255,89 +186,65 @@ backup_rules = """<?xml version="1.0" encoding="utf-8"?><full-backup-content />"
 data_extraction = """<?xml version="1.0" encoding="utf-8"?><data-extraction-rules />"""
 
 # ==========================================
-# 3. كود Kotlin (نسخة تعمل مع API المستقر)
+# 4. الواجهة (XML)
 # ==========================================
+layout_main = """
+<?xml version="1.0" encoding="utf-8"?>
+<org.mozilla.geckoview.GeckoView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/gecko_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+"""
 
+# ==========================================
+# 5. كود Kotlin (حل مشكلة Desktop Mode)
+# ==========================================
 main_activity = f"""
 package {PACKAGE_NAME}
 
 import android.os.Bundle
-import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoView
+import org.mozilla.geckoview.GeckoSessionSettings
 
 class MainActivity : AppCompatActivity() {{
 
     private lateinit var geckoView: GeckoView
     private lateinit var geckoSession: GeckoSession
     private lateinit var geckoRuntime: GeckoRuntime
-    private lateinit var urlInput: EditText
-    private lateinit var btnGo: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {{
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         geckoView = findViewById(R.id.gecko_view)
-        urlInput = findViewById(R.id.url_input)
-        btnGo = findViewById(R.id.btn_go)
-
+        
+        // إعداد المحرك
         geckoRuntime = GeckoRuntime.create(this)
         
-        val settings = GeckoSessionSettings()
-        
-        // 1. إجبار وضع سطح المكتب
-        settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
-        settings.usePrivateMode = false
-        settings.displayMode = GeckoSessionSettings.DISPLAY_MODE_BROWSER
-        
-        // 2. تزوير الهوية (PC User Agent) - Windows Chrome
-        settings.userAgentOverride = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+        // إعداد الجلسة مع إجبار وضع سطح المكتب
+        val settings = GeckoSessionSettings.Builder()
+            .usePrivateMode(false)
+            .viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP) // 🔥 السر هنا
+            .userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36") // 🔥 هوية ويندوز
+            .build()
 
         geckoSession = GeckoSession(settings)
         geckoSession.open(geckoRuntime)
         geckoView.setSession(geckoSession)
-
-        // تحميل Matecat
-        geckoSession.loadUri("https://www.matecat.com/") 
-
-        btnGo.setOnClickListener {{
-            loadUrlFromInput()
-        }}
-
-        urlInput.setOnEditorActionListener {{ _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {{
-                loadUrlFromInput()
-                true
-            }} else {{
-                false
-            }}
-        }}
-    }}
-
-    private fun loadUrlFromInput() {{
-        var url = urlInput.text.toString().trim()
-        if (url.isNotEmpty()) {{
-            if (!url.startsWith("http")) {{
-                url = "https://$url"
-            }}
-            geckoSession.loadUri(url)
-        }}
-    }}
-    
-    override fun onBackPressed() {{
-        // لا يوجد كود هنا حاليا
-        super.onBackPressed()
+        
+        // فتح الموقع العنيد
+        geckoSession.loadUri("https://www.matecat.com/")
     }}
 }}
 """
 
-# 🔥 التعديل هنا: أمر إنشاء المفتاح داخل GitHub Actions 🔥
+# ==========================================
+# 6. ملف سيرفر البناء (GitHub Actions)
+# ==========================================
 github_workflow = """
 name: Build B Browser
 on:
@@ -355,6 +262,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: gradle
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -364,25 +272,29 @@ jobs:
       with:
         gradle-version: '8.5'
     
-    # 🔥 خطوة جديدة: توليد المفتاح داخل السيرفر 🔥
+    # 🔥 توليد مفتاح التوقيع في السحابة 🔥
     - name: Generate Keystore
       run: |
         keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
     
+    - name: Clean Build
+      run: gradle clean
+      
+    # استخدام gradle assembleRelease مباشرة لتجنب مشاكل الصلاحيات
     - name: Build APK (Release)
-      run: gradle assembleRelease
+      run: gradle assembleRelease --stacktrace
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: B-Browser-PC-Edition
+        name: B-Browser-PC
         path: app/build/outputs/apk/release/*.apk
 """
 
 # ==========================================
 # التنفيذ
 # ==========================================
-print("🚀 بدء بناء النسخة النهائية (B-Browser Stable PC)...")
+print("🚀 بدء بناء المشروع النهائي (Fixed Icon + Mozilla Repo)...")
 
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
@@ -392,23 +304,18 @@ create_file("app/build.gradle.kts", build_gradle_app)
 create_file("app/src/main/AndroidManifest.xml", manifest)
 create_file("app/src/main/res/xml/backup_rules.xml", backup_rules)
 create_file("app/src/main/res/xml/data_extraction_rules.xml", data_extraction)
+create_file("app/src/main/res/layout/activity_main.xml", layout_main)
 
-os.makedirs(VALUES_DIR, exist_ok=True)
-create_file(os.path.join(VALUES_DIR, "colors.xml"), colors_xml)
-
+# 🔥 إنشاء الأيقونة في المكان الصحيح 🔥
 os.makedirs(DRAWABLE_DIR, exist_ok=True)
 create_file(os.path.join(DRAWABLE_DIR, "ic_launcher.xml"), ic_launcher_xml)
-create_file(os.path.join(DRAWABLE_DIR, "bg_search_bar.xml"), bg_search_bar_xml)
-
-os.makedirs(LAYOUT_DIR, exist_ok=True)
-create_file(os.path.join(LAYOUT_DIR, "activity_main.xml"), activity_main_xml)
 
 os.makedirs(JAVA_DIR, exist_ok=True)
 create_file(os.path.join(JAVA_DIR, "MainActivity.kt"), main_activity)
 create_file(".github/workflows/build.yml", github_workflow)
 
-print("✅ تم تجهيز الملفات (إصلاح النسخة + توليد المفتاح سحابياً).")
-print("🔄 جاري إعداد Git والرفع...")
+print("✅ تم بناء جميع الملفات.")
+print("🔄 جاري الرفع إلى GitHub...")
 
 try:
     subprocess.run(["git", "config", "--global", "--add", "safe.directory", BASE_DIR], check=True)
@@ -421,7 +328,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Final Fix: Gecko 109.0.1 + Cloud Keystore"], check=False)
+    subprocess.run(["git", "commit", "-m", "Final Fix: Correct Icon Path + Mozilla Repo + PC Mode"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -429,7 +336,7 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ تم التحديث! هذا البناء سينجح بإذن الله.")
+    print("\n✅✅ تم التحديث! تابع البناء الأخضر الآن.")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:

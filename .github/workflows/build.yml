@@ -24,20 +24,16 @@ jobs:
       with:
         gradle-version: '8.5'
     
-    # 🔥 توليد مفتاح التوقيع في السحابة 🔥
+    # إنشاء المفتاح سحابياً
     - name: Generate Keystore
       run: |
         keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
     
-    - name: Clean Build
-      run: gradle clean
-      
-    # استخدام gradle assembleRelease مباشرة لتجنب مشاكل الصلاحيات
     - name: Build APK (Release)
-      run: gradle assembleRelease --stacktrace
+      run: gradle assembleRelease
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: B-Browser-PC
+        name: B-Browser-Pro-Edition
         path: app/build/outputs/apk/release/*.apk
