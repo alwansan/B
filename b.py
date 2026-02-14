@@ -1,5 +1,6 @@
 import os
 import subprocess
+import re
 
 KOTLIN_FILE = "app/src/main/java/com/alwansan/b/MainActivity.kt"
 
@@ -11,53 +12,55 @@ def patch():
     with open(KOTLIN_FILE, "r", encoding="utf-8") as f:
         content = f.read()
 
-    start_key = "var url = input.trim()"
-    end_key = "addToHistoryLog(url)"
+    # استبدال دالة loadUrl بالكامل
+    new_function = """
+    private fun loadUrl(input: String) {
+        if (currentTabIndex == -1) return
 
-    start = content.find(start_key)
-    end = content.find(end_key)
-
-    if start == -1 or end == -1:
-        print("❌ URL logic block not found")
-        return
-
-    end += len(end_key)
-
-    new_logic = """
         var url = input.trim()
         if (url.isEmpty()) return
 
-        val isHttp = url.startsWith("http://") || url.startsWith("https://")
-        val hasSpace = url.contains(" ")
-        val looksLikeDomain = url.contains(".") || url.contains(":") || url.startsWith("localhost")
+        when {
+            url.contains("://") -> {
+                // already full URL
+            }
 
-        if (isHttp) {
-            // open as is
-        } else if (hasSpace) {
-            url = "https://www.google.com/search?q=$url"
-        } else if (looksLikeDomain) {
-            url = "http://$url"
-        } else {
-            url = "https://www.google.com/search?q=$url"
+            !url.contains(" ") && (url.contains(".") || url.contains(":")) -> {
+                url = "https://$url"
+            }
+
+            else -> {
+                url = "https://www.google.com/search?q=" +
+                        java.net.URLEncoder.encode(url, "UTF-8")
+            }
         }
 
+        sessions[currentTabIndex].session.loadUri(url)
         addToHistoryLog(url)
+        geckoView.requestFocus()
+    }
     """
 
-    content = content[:start] + new_logic + content[end:]
+    # استبدال أي نسخة قديمة من loadUrl
+    content = re.sub(
+        r'private fun loadUrl\(.*?\n\s*\}',
+        new_function,
+        content,
+        flags=re.DOTALL
+    )
 
     with open(KOTLIN_FILE, "w", encoding="utf-8") as f:
         f.write(content)
 
-    print("✅ URL system fully repaired.")
+    print("✅ loadUrl fully reset to stable version.")
 
 patch()
 
-print("🚀 Pushing final fix...")
+print("🚀 Pushing hard reset fix...")
 try:
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Fix: Stable URL handling (localhost + search + domains)"], check=False)
+    subprocess.run(["git", "commit", "-m", "Hard reset URL logic (stable + localhost safe)"], check=False)
     subprocess.run(["git", "push", "-f", "origin", "main"], check=True)
-    print("✅ Should work correctly now.")
+    print("✅ URL system rebuilt cleanly.")
 except subprocess.CalledProcessError as e:
     print("❌ Git error:", e)

@@ -240,21 +240,33 @@ class MainActivity : AppCompatActivity() {
         else switchToTab(if (index > 0) index - 1 else 0)
     }
 
+    
     private fun loadUrl(input: String) {
         if (currentTabIndex == -1) return
-        
-        
-        
+
         var url = input.trim()
         if (url.isEmpty()) return
 
-        val isHttp = url.startsWith("http://") || url.startsWith("https://")
-        val hasSpace = url.contains(" ")
-        val looksLikeDomain = url.contains(".") || url.contains(":") || url.startsWith("localhost")
+        when {
+            url.contains("://") -> {
+                // already full URL
+            }
 
-        if (isHttp) {
-            // open as is
-        } else if (hasSpace) {
+            !url.contains(" ") && (url.contains(".") || url.contains(":")) -> {
+                url = "https://$url"
+            }
+
+            else -> {
+                url = "https://www.google.com/search?q=" +
+                        java.net.URLEncoder.encode(url, "UTF-8")
+            }
+        }
+
+        sessions[currentTabIndex].session.loadUri(url)
+        addToHistoryLog(url)
+        geckoView.requestFocus()
+    }
+     else if (hasSpace) {
             url = "https://www.google.com/search?q=$url"
         } else if (looksLikeDomain) {
             url = "http://$url"

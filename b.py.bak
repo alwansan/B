@@ -11,35 +11,32 @@ def patch():
     with open(KOTLIN_FILE, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # استبدال منطق URL بالكامل بمنطق آمن بدون Regex
-    old_block_start = "var url = input.trim()"
-    old_block_end = "addToHistoryLog(url)"
+    start_key = "var url = input.trim()"
+    end_key = "addToHistoryLog(url)"
 
-    start_index = content.find(old_block_start)
-    end_index = content.find(old_block_end)
+    start = content.find(start_key)
+    end = content.find(end_key)
 
-    if start_index == -1 or end_index == -1:
-        print("❌ URL block not found safely.")
+    if start == -1 or end == -1:
+        print("❌ URL logic block not found")
         return
 
-    end_index += len(old_block_end)
+    end += len(end_key)
 
     new_logic = """
         var url = input.trim()
         if (url.isEmpty()) return
 
         val isHttp = url.startsWith("http://") || url.startsWith("https://")
-        val isLocalhost = url.startsWith("localhost")
-        val isIPv4 = url.split(".").size == 4 && url.replace(".", "").replace(":", "").all { it.isDigit() }
+        val hasSpace = url.contains(" ")
+        val looksLikeDomain = url.contains(".") || url.contains(":") || url.startsWith("localhost")
 
         if (isHttp) {
-            // use as is
-        } else if (isLocalhost) {
+            // open as is
+        } else if (hasSpace) {
+            url = "https://www.google.com/search?q=$url"
+        } else if (looksLikeDomain) {
             url = "http://$url"
-        } else if (isIPv4) {
-            url = "http://$url"
-        } else if (url.contains(".")) {
-            url = "https://$url"
         } else {
             url = "https://www.google.com/search?q=$url"
         }
@@ -47,20 +44,20 @@ def patch():
         addToHistoryLog(url)
     """
 
-    content = content[:start_index] + new_logic + content[end_index:]
+    content = content[:start] + new_logic + content[end:]
 
     with open(KOTLIN_FILE, "w", encoding="utf-8") as f:
         f.write(content)
 
-    print("✅ Regex error fixed safely.")
+    print("✅ URL system fully repaired.")
 
 patch()
 
-print("🚀 Pushing clean fix...")
+print("🚀 Pushing final fix...")
 try:
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Fix: Remove broken regex, safe localhost/IP detection"], check=False)
+    subprocess.run(["git", "commit", "-m", "Fix: Stable URL handling (localhost + search + domains)"], check=False)
     subprocess.run(["git", "push", "-f", "origin", "main"], check=True)
-    print("✅ Build should pass now.")
+    print("✅ Should work correctly now.")
 except subprocess.CalledProcessError as e:
     print("❌ Git error:", e)
