@@ -7,7 +7,7 @@ import subprocess
 PROJECT_NAME = "B-Browser"
 PACKAGE_NAME = "com.alwansan.b"
 REPO_URL = "https://github.com/alwansan/B"
-GECKO_VERSION = "121.+"  # النسخة التي نجحت في البناء
+GECKO_VERSION = "121.+" 
 
 # تعريف المسارات
 BASE_DIR = os.getcwd()
@@ -15,6 +15,7 @@ APP_DIR = os.path.join(BASE_DIR, "app")
 SRC_MAIN = os.path.join(APP_DIR, "src", "main")
 JAVA_DIR = os.path.join(SRC_MAIN, "java", "com", "alwansan", "b")
 RES_DIR = os.path.join(SRC_MAIN, "res")
+ASSETS_DIR = os.path.join(SRC_MAIN, "assets") # مجلد ملفات الويب المحلية
 DRAWABLE_DIR = os.path.join(RES_DIR, "drawable")
 LAYOUT_DIR = os.path.join(RES_DIR, "layout")
 VALUES_DIR = os.path.join(RES_DIR, "values")
@@ -28,7 +29,233 @@ def create_file(path, content):
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
 
 # ==========================================
-# 1. التصميم (Modern UI + Colors + Icons)
+# 1. الصفحة الرئيسية التفاعلية (HTML/JS) 🎨
+# ==========================================
+# هذه الصفحة ستعمل كـ "Local Home Page" مع تأثيرات جافا سكريبت
+home_html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Tab</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #121212; /* رمادي داكن جداً */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .content {
+            z-index: 1;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        h1 {
+            color: #E0E0E0; /* رمادي فاتح */
+            font-size: 80px;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            font-weight: bold;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .search-box {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1); /* شفاف */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 5px 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
+        }
+
+        .search-box:hover, .search-box:focus-within {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 229, 255, 0.2); /* توهج نيون خفيف */
+            transform: scale(1.02);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #FFFFFF;
+            font-size: 18px;
+            padding: 10px;
+            outline: none;
+        }
+
+        button {
+            background: transparent;
+            border: none;
+            color: #00E5FF;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"><canvas id="bgCanvas"></canvas></div>
+
+    <div class="content">
+        <h1>Google</h1>
+        <form action="https://www.google.com/search" method="GET" class="search-box">
+            <input type="text" name="q" placeholder="Search the web..." autocomplete="off" autofocus>
+            <button type="submit">🔍</button>
+        </form>
+    </div>
+
+    <script>
+        // تأثير الخلفية التفاعلية (Particles)
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particlesArray;
+
+        // تفاعل الماوس
+        let mouse = {
+            x: null,
+            y: null,
+            radius: (canvas.height/80) * (canvas.width/80)
+        }
+
+        window.addEventListener('mousemove', function(event) {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+        
+        // دعم اللمس للهاتف
+        window.addEventListener('touchmove', function(event) {
+            mouse.x = event.touches[0].clientX;
+            mouse.y = event.touches[0].clientY;
+        });
+
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = '#00E5FF'; // لون النيون
+                ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+
+                // تفاعل الماوس
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx*dx + dy*dy);
+                
+                if (distance < mouse.radius + this.size) {
+                    if (mouse.x < this.x && this.x < canvas.width - this.size * 10) this.x += 10;
+                    if (mouse.x > this.x && this.x > this.size * 10) this.x -= 10;
+                    if (mouse.y < this.y && this.y < canvas.height - this.size * 10) this.y += 10;
+                    if (mouse.y > this.y && this.y > this.size * 10) this.y -= 10;
+                }
+                
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 3) + 1;
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 2) - 1;
+                let directionY = (Math.random() * 2) - 1;
+                let color = '#8C5523';
+
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + 
+                                   ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width/7) * (canvas.height/7)) {
+                        opacityValue = 1 - (distance/20000);
+                        ctx.strokeStyle = 'rgba(150, 150, 150,' + opacityValue + ')'; // خطوط رمادية
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+        }
+
+        window.addEventListener('resize', function() {
+            canvas.width = innerWidth;
+            canvas.height = innerHeight;
+            mouse.radius = (canvas.height/80) * (canvas.width/80);
+            init();
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
+"""
+
+# ==========================================
+# 2. ملفات التصميم
 # ==========================================
 
 colors_xml = """
@@ -38,35 +265,32 @@ colors_xml = """
     <color name="surface_gray">#1E1E1E</color>
     <color name="neon_blue">#00E5FF</color>
     <color name="text_white">#FFFFFF</color>
-    <color name="text_hint">#80FFFFFF</color>
-    <color name="black_overlay">#CC000000</color>
 </resources>
 """
 
-# خلفية شريط البحث (حواف دائرية + لون غامق)
-bg_search_bar_xml = """
-<?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/surface_gray"/>
-    <corners android:radius="24dp"/>
-    <stroke android:width="1dp" android:color="#33FFFFFF"/>
-</shape>
-"""
-
-# أيقونة التطبيق
 ic_launcher_xml = """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#121212" android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#1F1F1F" android:pathData="M0,0h108v108h-108z"/>
     <path android:fillColor="#00E5FF" android:pathData="M30,30h48v48h-48z"/>
     <path android:fillColor="#FFFFFF" android:pathData="M40,40h28v28h-28z"/>
 </vector>
 """
 
-# تصميم الواجهة (شريط بحث عائم في الأسفل)
+# خلفية شريط العنوان الأصلي (للبحث الثانوي)
+bg_search_bar_xml = """
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/surface_gray"/>
+    <corners android:radius="12dp"/>
+    <stroke android:width="1dp" android:color="#33FFFFFF"/>
+</shape>
+"""
+
+# تصميم الواجهة (مع الشريط القابل للإخفاء)
 activity_main_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -74,60 +298,54 @@ activity_main_xml = """
     android:layout_height="match_parent"
     android:background="@color/background_dark">
 
-    <!-- المتصفح -->
     <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- شريط التحكم العائم -->
+    <!-- الشريط العلوي الذي سيختفي عند ضغط Ctrl+G -->
     <LinearLayout
-        android:id="@+id/bottom_bar"
+        android:id="@+id/top_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="16dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_margin="10dp"
         android:background="@drawable/bg_search_bar"
-        android:elevation="12dp"
+        android:elevation="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:visibility="visible">
 
         <EditText
             android:id="@+id/url_input"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@null"
-            android:hint="Search or type URL..."
+            android:hint="Ctrl+G to hide this bar..."
             android:textColor="@color/text_white"
-            android:textColorHint="@color/text_hint"
+            android:textColorHint="#80FFFFFF"
             android:inputType="textUri"
             android:imeOptions="actionGo"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
             android:textSize="14sp"
             android:singleLine="true" />
-
+            
         <Button
             android:id="@+id/btn_go"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="40dp"
             android:text="GO"
-            android:textStyle="bold"
             android:textColor="#000000"
-            android:backgroundTint="@color/neon_blue"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minWidth="64dp" />
-
+            android:backgroundTint="@color/neon_blue"/>
     </LinearLayout>
 
 </RelativeLayout>
 """
 
 # ==========================================
-# 2. ملفات البناء (Gradle)
+# 3. إعدادات Gradle 
 # ==========================================
 
 settings_gradle = """
@@ -186,8 +404,8 @@ android {{
         applicationId = "{PACKAGE_NAME}"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "8.0-Pro-Desktop"
+        versionCode = 9
+        versionName = "9.0-Ghost-Mode"
     }}
 
     signingConfigs {{
@@ -231,12 +449,13 @@ manifest = f"""
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- السماح بتدوير الشاشة -->
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/ic_launcher"
-        android:label="B Browser PC"
+        android:label="B Browser"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar"
@@ -260,16 +479,19 @@ backup_rules = """<?xml version="1.0" encoding="utf-8"?><full-backup-content />"
 data_extraction = """<?xml version="1.0" encoding="utf-8"?><data-extraction-rules />"""
 
 # ==========================================
-# 3. كود Kotlin (السر: UserAgent + Viewport)
+# 4. كود Kotlin (المنطق: اختصارات الكيبورد + الصفحة الرئيسية)
 # ==========================================
 
 main_activity = f"""
 package {PACKAGE_NAME}
 
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -283,6 +505,8 @@ class MainActivity : AppCompatActivity() {{
     private lateinit var geckoRuntime: GeckoRuntime
     private lateinit var urlInput: EditText
     private lateinit var btnGo: Button
+    private lateinit var topBar: LinearLayout
+    private var isUiHidden = false
 
     override fun onCreate(savedInstanceState: Bundle?) {{
         super.onCreate(savedInstanceState)
@@ -291,27 +515,23 @@ class MainActivity : AppCompatActivity() {{
         geckoView = findViewById(R.id.gecko_view)
         urlInput = findViewById(R.id.url_input)
         btnGo = findViewById(R.id.btn_go)
+        topBar = findViewById(R.id.top_bar)
 
-        // إعداد المحرك
         geckoRuntime = GeckoRuntime.create(this)
         
-        // إعدادات الجلسة لخداع Matecat
         val settings = GeckoSessionSettings.Builder()
             .usePrivateMode(false)
-            // 1. هوية ويندوز 10 (كروم)
-            .userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
-            // 2. تفعيل وضع سطح المكتب (يجعل العرض يبدو عريضاً)
+            // إجبار المتصفح على دقة سطح المكتب (تقريباً 1080p عرض)
             .viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
-            // 3. وضع التصفح العادي
-            .displayMode(GeckoSessionSettings.DISPLAY_MODE_BROWSER)
+            .userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
             .build()
 
         geckoSession = GeckoSession(settings)
         geckoSession.open(geckoRuntime)
         geckoView.setSession(geckoSession)
 
-        // فتح Matecat مباشرة للتجربة
-        loadUrl("https://www.matecat.com/")
+        // 🔥 تحميل الصفحة المحلية التفاعلية (Google + Particles) 🔥
+        geckoSession.loadUri("file:///android_asset/home.html")
 
         btnGo.setOnClickListener {{
             loadUrl(urlInput.text.toString())
@@ -330,10 +550,38 @@ class MainActivity : AppCompatActivity() {{
     private fun loadUrl(url: String) {{
         var finalUrl = url.trim()
         if (finalUrl.isNotEmpty()) {{
-            if (!finalUrl.startsWith("http")) {{
+            if (!finalUrl.startsWith("http") && !finalUrl.startsWith("file")) {{
                 finalUrl = "https://$finalUrl"
             }}
             geckoSession.loadUri(finalUrl)
+        }}
+    }}
+
+    // ⚡ التعامل مع اختصارات الكيبورد (Ctrl + G) ⚡
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {{
+        if (event.action == KeyEvent.ACTION_DOWN) {{
+            // التحقق من ضغط Ctrl + G
+            if (event.keyCode == KeyEvent.KEYCODE_G && event.isCtrlPressed) {{
+                toggleUi()
+                return true
+            }}
+        }}
+        return super.dispatchKeyEvent(event)
+    }}
+
+    private fun toggleUi() {{
+        isUiHidden = !isUiHidden
+        if (isUiHidden) {{
+            // إخفاء كل شيء والبقاء على المتصفح فقط
+            topBar.visibility = View.GONE
+            // إخفاء شريط الحالة العلوي (Full Screen)
+            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+        }} else {{
+            // إظهار الشريط
+            topBar.visibility = View.VISIBLE
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         }}
     }}
 }}
@@ -366,7 +614,6 @@ jobs:
       with:
         gradle-version: '8.5'
     
-    # إنشاء المفتاح سحابياً
     - name: Generate Keystore
       run: |
         keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
@@ -377,14 +624,14 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: B-Browser-Pro-Edition
+        name: B-Browser-Ultimate
         path: app/build/outputs/apk/release/*.apk
 """
 
 # ==========================================
 # التنفيذ
 # ==========================================
-print("🚀 بدء بناء النسخة الاحترافية (Modern UI + Fixed Desktop Mode)...")
+print("🚀 بدء بناء النسخة التفاعلية (Interactive + Ghost Mode)...")
 
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
@@ -394,6 +641,10 @@ create_file("app/build.gradle.kts", build_gradle_app)
 create_file("app/src/main/AndroidManifest.xml", manifest)
 create_file("app/src/main/res/xml/backup_rules.xml", backup_rules)
 create_file("app/src/main/res/xml/data_extraction_rules.xml", data_extraction)
+
+# إنشاء صفحة الويب المحلية
+os.makedirs(ASSETS_DIR, exist_ok=True)
+create_file(os.path.join(ASSETS_DIR, "home.html"), home_html)
 
 # ملفات التصميم
 os.makedirs(VALUES_DIR, exist_ok=True)
@@ -408,7 +659,7 @@ os.makedirs(JAVA_DIR, exist_ok=True)
 create_file(os.path.join(JAVA_DIR, "MainActivity.kt"), main_activity)
 create_file(".github/workflows/build.yml", github_workflow)
 
-print("✅ تم تجهيز جميع الملفات (التصميم الجديد + حل Matecat).")
+print("✅ تم إضافة الصفحة التفاعلية واختصار Ctrl+G.")
 print("🔄 جاري الرفع إلى GitHub...")
 
 try:
@@ -422,7 +673,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Ultimate Upgrade: Modern UI + Fixed PC Viewport"], check=False)
+    subprocess.run(["git", "commit", "-m", "New Feature: Interactive Home + Ghost Mode (Ctrl+G)"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -430,7 +681,7 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ تم التحديث! التطبيق سيظهر الآن بشكل رائع وسيخدع المواقع بنجاح.")
+    print("\n✅✅ استمتع بالمتصفح الجديد! الصفحة الرئيسية ستكون مذهلة.")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:
