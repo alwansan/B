@@ -64,6 +64,16 @@ class MainActivity : AppCompatActivity() {
         geckoView.isFocusableInTouchMode = true
         
         geckoRuntime = GeckoRuntime.create(this)
+
+        // 🔒 Disable double tap & pinch zoom at View level
+        geckoView.setOnTouchListener { _, event ->
+            if (event.pointerCount > 1) {
+                true
+            } else {
+                false
+            }
+        }
+        
         
         // 🔥 تثبيت الإضافات تلقائياً (Extensions) 🔥
         installBuiltInExtensions()
@@ -145,7 +155,7 @@ class MainActivity : AppCompatActivity() {
         
         val settings = builder.build()
         // 🔥 إلغاء التكبير المزدوج المزعج 🔥
-        settings.setBoolean(GeckoSessionSettings.USE_DOUBLE_TAP_ZOOM, false)
+        // Removed invalid USE_DOUBLE_TAP_ZOOM (not supported in Gecko 121+)
         
         val session = GeckoSession(settings)
         session.open(geckoRuntime)
