@@ -3,14 +3,14 @@
     android:layout_width="300dp"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@color/dialog_bg"
+    android:background="@color/bg_secondary"
     android:padding="20dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Settings"
-        android:textColor="@color/eagle_blue"
+        android:textColor="@color/accent_neon"
         android:textSize="20sp"
         android:textStyle="bold"
         android:gravity="center"
@@ -25,18 +25,12 @@
 
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333" android:layout_marginVertical="15dp"/>
 
-    <Button
-        android:id="@+id/btn_show_history"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="View History"
-        android:backgroundTint="#333"/>
-
+    <!-- زر التاريخ موجود في النافذة الأخرى، هنا زر المسح فقط -->
     <Button
         android:id="@+id/btn_clear_data"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Clear Cookies &amp; Cache"
-        android:backgroundTint="#8B0000"
+        android:backgroundTint="#FA2E4D"
         android:layout_marginTop="10dp"/>
 </LinearLayout>

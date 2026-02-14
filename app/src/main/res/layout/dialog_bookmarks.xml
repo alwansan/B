@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="400dp"
+    android:layout_height="300dp"
+    android:orientation="vertical"
+    android:background="@color/bg_secondary"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bookmarks &amp; History"
+        android:textColor="@color/accent_neon"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="10dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+        <Button
+            android:id="@+id/btn_view_bookmarks"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Bookmarks"
+            android:backgroundTint="@color/bg_main"
+            android:textColor="#FFF"/>
+        <Button
+            android:id="@+id/btn_view_history"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="History"
+            android:backgroundTint="@color/bg_main"
+            android:textColor="#FFF"
+            android:layout_marginStart="5dp"/>
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/list_data"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="10dp"
+        android:divider="#333"
+        android:dividerHeight="1dp"
+        android:background="@color/bg_main"/>
+
+    <Button
+        android:id="@+id/btn_clear_history"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:text="Clear History"
+        android:textColor="#FFF"
+        android:textSize="12sp"
+        android:backgroundTint="#FA2E4D"
+        android:visibility="gone"
+        android:layout_marginTop="8dp"/>
+</LinearLayout>

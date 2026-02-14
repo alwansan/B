@@ -34,5 +34,5 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: B-Browser-Eagle-Edition
+        name: B-Browser-Opera-Eagle
         path: app/build/outputs/apk/release/*.apk
