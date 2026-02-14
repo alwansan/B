@@ -11,8 +11,8 @@ android {
         applicationId = "com.alwansan.b"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "8.0-Pro-Desktop"
+        versionCode = 9
+        versionName = "9.0-Ghost-Mode"
     }
 
     signingConfigs {

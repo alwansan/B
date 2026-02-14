@@ -4,6 +4,4 @@
     <color name="surface_gray">#1E1E1E</color>
     <color name="neon_blue">#00E5FF</color>
     <color name="text_white">#FFFFFF</color>
-    <color name="text_hint">#80FFFFFF</color>
-    <color name="black_overlay">#CC000000</color>
 </resources>
