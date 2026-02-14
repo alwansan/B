@@ -7,4 +7,6 @@
     <color name="text_primary">#FFFFFF</color>
     <color name="tab_active">#242633</color>
     <color name="tab_inactive">#15161E</color>
+    <!-- تم إضافة هذا اللون لمنع أي أخطاء من ملفات قديمة -->
+    <color name="surface_gray">#242633</color>
 </resources>
