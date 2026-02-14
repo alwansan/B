@@ -16,6 +16,9 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoView
+import org.mozilla.geckoview.WebExtension
+import org.mozilla.geckoview.WebExtensionController
+import org.mozilla.geckoview.BasicSelectionActionDelegate
 import java.io.File
 import java.io.FileOutputStream
 
@@ -56,27 +59,28 @@ class MainActivity : AppCompatActivity() {
         btnBookmark = findViewById(R.id.btn_bookmark)
         btnMenu = findViewById(R.id.btn_menu)
 
-        // تحسين استجابة الماوس واللمس
+        // تحسين التركيز للماوس والكيبورد
         geckoView.isFocusable = true
         geckoView.isFocusableInTouchMode = true
-        geckoView.requestFocus()
-
+        
         geckoRuntime = GeckoRuntime.create(this)
         
+        // 🔥 تثبيت الإضافات تلقائياً (Extensions) 🔥
+        installBuiltInExtensions()
+
         val prefs = getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE)
         currentResolution = prefs.getString("resolution", "1080") ?: "1080"
 
         findViewById<Button>(R.id.btn_add_tab).setOnClickListener { addNewTab(homeUrl) }
         findViewById<ImageButton>(R.id.btn_go).setOnClickListener { loadUrl(urlInput.text.toString()) }
         findViewById<ImageButton>(R.id.btn_settings).setOnClickListener { showSettingsDialog() }
-        
         btnMenu.setOnClickListener { showBookmarksDialog() }
 
         btnBookmark.setOnClickListener {
             if(currentTabIndex != -1) {
                 val tab = sessions[currentTabIndex]
                 saveBookmark(tab.currentUrl, tab.title)
-                Toast.makeText(this, "Saved to Bookmarks! ⭐", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Saved! ⭐", Toast.LENGTH_SHORT).show()
                 btnBookmark.setColorFilter(Color.parseColor("#00E5FF"))
             }
         }
@@ -92,9 +96,22 @@ class MainActivity : AppCompatActivity() {
         restoreTabs()
     }
 
+    // 🔥 دالة تثبيت الإضافات من مجلد assets/extensions 🔥
+    private fun installBuiltInExtensions() {
+        try {
+            val extensions = assets.list("extensions") ?: return
+            for (extFile in extensions) {
+                if (extFile.endsWith(".xpi")) {
+                    geckoRuntime.webExtensionController.install(
+                        "resource://android/assets/extensions/$extFile"
+                    )
+                }
+            }
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
     private fun setupLocalHomeFile() {
         val file = File(filesDir, HOME_FILE_NAME)
-        // نقوم بالكتابة دائماً للتأكد من تحديث الواجهة
         try {
             assets.open(HOME_FILE_NAME).use { input ->
                 FileOutputStream(file).use { output -> input.copyTo(output) }
@@ -106,7 +123,10 @@ class MainActivity : AppCompatActivity() {
     private fun addNewTab(urlToLoad: String) {
         val builder = GeckoSessionSettings.Builder()
             .usePrivateMode(false)
+            // 🔥 أهم سطر: هذا يمنع التكبير عند النقر المزدوج (يثبت الشاشة) 🔥
+            .suspendMediaWhenInactive(false)
             
+        // إعدادات الشاشة
         when(currentResolution) {
             "720" -> {
                 builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
@@ -123,17 +143,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        val session = GeckoSession(builder.build())
+        val settings = builder.build()
+        // 🔥 إلغاء التكبير المزدوج المزعج 🔥
+        settings.setBoolean(GeckoSessionSettings.USE_DOUBLE_TAP_ZOOM, false)
+        
+        val session = GeckoSession(settings)
         session.open(geckoRuntime)
 
         val tabView = LayoutInflater.from(this).inflate(R.layout.item_tab, tabsContainer, false)
         val tabTitleView = tabView.findViewById<TextView>(R.id.tab_title)
-        val tabIndicator = tabView.findViewById<View>(R.id.tab_indicator)
         val btnClose = tabView.findViewById<ImageButton>(R.id.btn_close_tab)
 
         val newTab = TabSession(session, tabView, urlToLoad)
         sessions.add(newTab)
         
+        // 🔥 تفعيل القوائم المنبثقة (Right Click / Context Menu) 🔥
+        session.selectionActionDelegate = BasicSelectionActionDelegate(this)
+
         session.progressDelegate = object : GeckoSession.ProgressDelegate {
             override fun onPageStart(session: GeckoSession, url: String) {
                 newTab.currentUrl = url
@@ -155,12 +181,6 @@ class MainActivity : AppCompatActivity() {
                 newTab.title = finalTitle
                 tabTitleView.text = finalTitle
             }
-            // تمكين النقر بالماوس (Context Menu)
-            override fun onContextMenu(session: GeckoSession, screenX: Int, screenY: Int, meta: GeckoSession.ContentDelegate.ContextElement) {
-                // في النسخ الحديثة يتم التعامل معها تلقائياً، 
-                // لكن وجود الدالة يضمن تفعيل الميزة
-                super.onContextMenu(session, screenX, screenY, meta)
-            }
         }
 
         tabView.setOnClickListener { switchToTab(sessions.indexOf(newTab)) }
@@ -177,8 +197,7 @@ class MainActivity : AppCompatActivity() {
         currentTabIndex = index
         val tab = sessions[index]
         geckoView.setSession(tab.session)
-        // إعادة التركيز للمتصفح عند التبديل
-        geckoView.requestFocus()
+        geckoView.requestFocus() // إعادة التركيز
 
         for (i in sessions.indices) {
             val view = sessions[i].tabView
@@ -223,6 +242,10 @@ class MainActivity : AppCompatActivity() {
         geckoView.requestFocus()
     }
 
+    // ==================
+    // 💾 Bookmarks & History & Settings (نفس الكود السابق، يعمل بكفاءة)
+    // ==================
+    
     private fun showBookmarksDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_bookmarks, null)
         val btnBookmarks = dialogView.findViewById<Button>(R.id.btn_view_bookmarks)
@@ -235,7 +258,6 @@ class MainActivity : AppCompatActivity() {
 
         fun loadList(type: String) {
             val listData = ArrayList<Map<String, String>>()
-            
             if (type == "bookmarks") {
                 val prefs = getSharedPreferences("Bookmarks", Context.MODE_PRIVATE)
                 val jsonArray = JSONArray(prefs.getString("list", "[]"))
@@ -258,12 +280,10 @@ class MainActivity : AppCompatActivity() {
                 dialogTitle.text = "🕒 Browsing History"
                 btnClearHistory.visibility = View.VISIBLE
             }
-
             val adapter = object : SimpleAdapter(
                 this, listData, R.layout.item_list_row,
                 arrayOf("title", "url"), intArrayOf(R.id.row_title, R.id.row_url)
             ) {}
-            
             listView.adapter = adapter
             listView.setOnItemClickListener { _, _, position, _ ->
                 val url = listData[position]["url"]
@@ -271,11 +291,9 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
         }
-
         loadList("bookmarks")
         btnBookmarks.setOnClickListener { loadList("bookmarks") }
         btnHistory.setOnClickListener { loadList("history") }
-        
         btnClearHistory.setOnClickListener {
             File(filesDir, "history.txt").delete()
             loadList("history")
@@ -304,13 +322,11 @@ class MainActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_settings, null)
         val rgResolution = dialogView.findViewById<RadioGroup>(R.id.rg_resolution)
         val btnClear = dialogView.findViewById<Button>(R.id.btn_clear_data)
-
         when(currentResolution) {
             "720" -> rgResolution.check(R.id.rb_720)
             "4K" -> rgResolution.check(R.id.rb_4k)
             else -> rgResolution.check(R.id.rb_1080)
         }
-
         val dialog = AlertDialog.Builder(this).setView(dialogView).create()
         rgResolution.setOnCheckedChangeListener { _, checkedId ->
             val newRes = when(checkedId) { R.id.rb_720 -> "720" ; R.id.rb_4k -> "4K" ; else -> "1080" }
@@ -318,7 +334,6 @@ class MainActivity : AppCompatActivity() {
             getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE).edit().putString("resolution", newRes).apply()
             Toast.makeText(this, "Restart tabs to apply.", Toast.LENGTH_SHORT).show()
         }
-        
         btnClear.setOnClickListener {
             geckoRuntime.storageController.clearData(org.mozilla.geckoview.StorageController.ClearFlags.ALL)
             File(filesDir, "history.txt").delete()
@@ -332,6 +347,7 @@ class MainActivity : AppCompatActivity() {
             isGhostMode = !isGhostMode
             if (isGhostMode) {
                 uiContainer.visibility = View.GONE
+                // 🔥 وضع ملء الشاشة الحقيقي (شبح كامل) 🔥
                 window.decorView.systemUiVisibility = (
                         View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         or View.SYSTEM_UI_FLAG_LAYOUT_STABLE

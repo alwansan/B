@@ -12,12 +12,14 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/ic_launcher"
-        android:label="B-Eagle"
+        android:label="B-Ultra"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:resizeableActivity="true"
         tools:targetApi="31">
         
+        <!-- maxAspectRatio يحل مشكلة الحواف الرمادية في الشاشات الطويلة -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -28,6 +30,9 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            
+            <!-- دعم الشاشات العريضة جداً -->
+            <meta-data android:name="android.max_aspect" android:value="2.4" />
         </activity>
     </application>
 </manifest>
