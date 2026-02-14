@@ -30,19 +30,10 @@ def create_file(path, content):
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
 
 # ==========================================
-# 1. معالجة الأيقونة 🦅
+# 1. الموارد (Resources)
 # ==========================================
-def setup_icon():
-    custom_icon = "icon.png"
-    if os.path.exists(custom_icon):
-        print("🦅 تم العثور على صورة مخصصة (icon.png)! جاري تحويلها لأيقونة...")
-        dest = os.path.join(DRAWABLE_DIR, "ic_launcher.png") # حفظ كـ PNG مباشرة
-        os.makedirs(DRAWABLE_DIR, exist_ok=True)
-        shutil.copy(custom_icon, dest)
-        return True
-    return False
 
-# تصميم النسر الفيكتور (احتياطي)
+# تصميم النسر الفيكتور (الاحتياطي)
 vector_eagle_xml = """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -54,10 +45,6 @@ vector_eagle_xml = """
     <path android:fillColor="#FFFFFF" android:pathData="M12,6 L9,14 L12,18 L15,14 L12,6 Z"/>
 </vector>
 """
-
-# ==========================================
-# 2. ملفات التصميم (Opera Style UI) 🎨
-# ==========================================
 
 colors_xml = """
 <?xml version="1.0" encoding="utf-8"?>
@@ -107,7 +94,6 @@ bg_url_bar_xml = """
 </shape>
 """
 
-# تصميم نافذة المفضلات والسجل
 dialog_bookmarks_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -116,7 +102,6 @@ dialog_bookmarks_xml = """
     android:orientation="vertical"
     android:background="@color/bg_secondary"
     android:padding="16dp">
-
     <TextView
         android:id="@+id/dialog_title"
         android:layout_width="match_parent"
@@ -127,7 +112,6 @@ dialog_bookmarks_xml = """
         android:textStyle="bold"
         android:gravity="center"
         android:paddingBottom="10dp"/>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -151,7 +135,6 @@ dialog_bookmarks_xml = """
             android:textColor="#FFF"
             android:layout_marginStart="5dp"/>
     </LinearLayout>
-
     <ListView
         android:id="@+id/list_data"
         android:layout_width="match_parent"
@@ -161,7 +144,6 @@ dialog_bookmarks_xml = """
         android:divider="#333"
         android:dividerHeight="1dp"
         android:background="@color/bg_main"/>
-
     <Button
         android:id="@+id/btn_clear_history"
         android:layout_width="match_parent"
@@ -175,7 +157,6 @@ dialog_bookmarks_xml = """
 </LinearLayout>
 """
 
-# 🔥 هذا هو المتغير الذي كان مفقوداً (تصميم نافذة الإعدادات) 🔥
 dialog_settings_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -184,7 +165,6 @@ dialog_settings_xml = """
     android:orientation="vertical"
     android:background="@color/bg_secondary"
     android:padding="20dp">
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -194,17 +174,13 @@ dialog_settings_xml = """
         android:textStyle="bold"
         android:gravity="center"
         android:layout_marginBottom="20dp"/>
-
     <TextView android:text="Screen Resolution" android:textColor="#AAA" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
     <RadioGroup android:id="@+id/rg_resolution" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
         <RadioButton android:id="@+id/rb_720" android:text="720p (Mobile View)" android:textColor="#FFF"/>
         <RadioButton android:id="@+id/rb_1080" android:text="1080p (Desktop - Default)" android:textColor="#FFF"/>
         <RadioButton android:id="@+id/rb_4k" android:text="4K (Ultra Desktop)" android:textColor="#FFF"/>
     </RadioGroup>
-
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333" android:layout_marginVertical="15dp"/>
-
-    <!-- زر التاريخ موجود في النافذة الأخرى، هنا زر المسح فقط -->
     <Button
         android:id="@+id/btn_clear_data"
         android:layout_width="match_parent"
@@ -285,7 +261,6 @@ activity_main_xml = """
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_main">
-
     <LinearLayout
         android:id="@+id/ui_container"
         android:layout_width="match_parent"
@@ -293,15 +268,12 @@ activity_main_xml = """
         android:orientation="vertical"
         android:background="@color/bg_secondary"
         android:elevation="8dp">
-
-        <!-- شريط التبويبات -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:orientation="horizontal"
             android:paddingTop="4dp"
             android:paddingStart="4dp">
-            
             <HorizontalScrollView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -314,7 +286,6 @@ activity_main_xml = """
                     android:layout_height="match_parent"
                     android:orientation="horizontal"/>
             </HorizontalScrollView>
-
             <Button
                 android:id="@+id/btn_add_tab"
                 android:layout_width="44dp"
@@ -325,15 +296,12 @@ activity_main_xml = """
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center"/>
         </LinearLayout>
-
-        <!-- شريط العنوان والأدوات -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:gravity="center_vertical"
             android:padding="6dp"
             android:background="@color/bg_secondary">
-            
             <ImageButton
                 android:id="@+id/btn_menu"
                 android:layout_width="40dp"
@@ -341,7 +309,6 @@ activity_main_xml = """
                 android:src="@android:drawable/ic_menu_sort_by_size"
                 android:tint="#AAA"
                 android:background="?attr/selectableItemBackground"/>
-
             <ImageButton
                 android:id="@+id/btn_bookmark"
                 android:layout_width="40dp"
@@ -349,7 +316,6 @@ activity_main_xml = """
                 android:src="@android:drawable/star_off"
                 android:tint="#AAA"
                 android:background="?attr/selectableItemBackground"/>
-
             <EditText
                 android:id="@+id/url_input"
                 android:layout_width="0dp"
@@ -366,7 +332,6 @@ activity_main_xml = """
                 android:singleLine="true"
                 android:inputType="textUri"
                 android:imeOptions="actionGo|flagNoExtractUi"/>
-            
             <ImageButton
                 android:id="@+id/btn_go"
                 android:layout_width="40dp"
@@ -374,7 +339,6 @@ activity_main_xml = """
                 android:src="@android:drawable/ic_menu_send"
                 android:tint="@color/accent_neon"
                 android:background="?attr/selectableItemBackground"/>
-                
             <ImageButton
                 android:id="@+id/btn_settings"
                 android:layout_width="40dp"
@@ -384,7 +348,6 @@ activity_main_xml = """
                 android:background="?attr/selectableItemBackground"/>
         </LinearLayout>
     </LinearLayout>
-
     <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"
@@ -453,8 +416,8 @@ android {{
         applicationId = "{PACKAGE_NAME}"
         minSdk = 26
         targetSdk = 34
-        versionCode = 15
-        versionName = "15.0-Opera-Eagle"
+        versionCode = 16
+        versionName = "16.0-Fix-Duplicate"
     }}
 
     signingConfigs {{
@@ -938,7 +901,7 @@ jobs:
 # ==========================================
 # التنفيذ
 # ==========================================
-print("🚀 بدء بناء نسخة B-Eagle (Fixed Dialog XML)...")
+print("🚀 بدء بناء نسخة B-Eagle (Fixed Duplicate Resources)...")
 
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
@@ -949,13 +912,27 @@ create_file("app/src/main/AndroidManifest.xml", manifest)
 create_file("app/src/main/res/xml/backup_rules.xml", backup_rules)
 create_file("app/src/main/res/xml/data_extraction_rules.xml", data_extraction)
 
-# الأيقونات
-has_custom = setup_icon()
-if not has_custom:
-    os.makedirs(DRAWABLE_DIR, exist_ok=True)
-    create_file(os.path.join(DRAWABLE_DIR, "ic_launcher.xml"), vector_eagle_xml)
+# الأيقونات (تم تعديل المنطق ليمنع التكرار) 🦅🔥
+custom_icon_source = "icon.png"
+png_target = os.path.join(DRAWABLE_DIR, "ic_launcher.png")
+xml_target = os.path.join(DRAWABLE_DIR, "ic_launcher.xml")
 
-# الصفحة الرئيسية الجديدة (Dark Particle)
+os.makedirs(DRAWABLE_DIR, exist_ok=True)
+
+if os.path.exists(custom_icon_source):
+    print("🦅 تم العثور على صورة مخصصة! استخدام icon.png...")
+    # حذف الـ XML القديم إذا وجد لمنع التكرار
+    if os.path.exists(xml_target):
+        os.remove(xml_target)
+    shutil.copy(custom_icon_source, png_target)
+else:
+    print("🦅 استخدام أيقونة النسر الافتراضية (Vector)...")
+    # حذف الـ PNG القديم إذا وجد لمنع التكرار
+    if os.path.exists(png_target):
+        os.remove(png_target)
+    create_file(xml_target, vector_eagle_xml)
+
+# الصفحة الرئيسية الجديدة
 home_html_fixed = """
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>New Tab</title><style>body{margin:0;overflow:hidden;background-color:#191A24;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white}h1{font-size:90px;margin-bottom:20px;color:#fff;letter-spacing:-3px;font-weight:bold}h1 span{color:#00E5FF}input{width:600px;padding:20px 30px;border-radius:50px;border:none;background:#242633;color:white;font-size:20px;outline:none;box-shadow:0 10px 40px rgba(0,0,0,0.4);transition:0.3s}input:focus{box-shadow:0 0 0 2px #00E5FF;transform:scale(1.02)}</style></head><body><h1>B<span>-</span>Eagle</h1><form action="https://www.google.com/search" method="GET"><input type="text" name="q" placeholder="Search web..." autofocus autocomplete="off"></form></body></html>
 """
@@ -965,7 +942,7 @@ create_file(os.path.join(ASSETS_DIR, "home.html"), home_html_fixed)
 os.makedirs(VALUES_DIR, exist_ok=True)
 create_file(os.path.join(VALUES_DIR, "colors.xml"), colors_xml)
 
-os.makedirs(DRAWABLE_DIR, exist_ok=True)
+# ملفات التصميم الأخرى
 create_file(os.path.join(DRAWABLE_DIR, "bg_tab.xml"), bg_tab_xml)
 create_file(os.path.join(DRAWABLE_DIR, "bg_url_bar.xml"), bg_url_bar_xml)
 create_file(os.path.join(DRAWABLE_DIR, "bg_tab_indicator.xml"), bg_tab_indicator_xml)
@@ -973,7 +950,6 @@ create_file(os.path.join(DRAWABLE_DIR, "bg_tab_indicator.xml"), bg_tab_indicator
 os.makedirs(LAYOUT_DIR, exist_ok=True)
 create_file(os.path.join(LAYOUT_DIR, "activity_main.xml"), activity_main_xml)
 create_file(os.path.join(LAYOUT_DIR, "item_tab.xml"), item_tab_xml)
-# 🔥 هنا الإصلاح: تم تعريف وكتابة dialog_settings.xml 🔥
 create_file(os.path.join(LAYOUT_DIR, "dialog_settings.xml"), dialog_settings_xml)
 create_file(os.path.join(LAYOUT_DIR, "dialog_bookmarks.xml"), dialog_bookmarks_xml)
 create_file(os.path.join(LAYOUT_DIR, "item_list_row.xml"), item_list_row_xml)
@@ -994,10 +970,10 @@ try:
     except subprocess.CalledProcessError:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Final Fix: Missing Variable + Opera UI"], check=False)
+    subprocess.run(["git", "commit", "-m", "Final Fix: Resolve Duplicate Icon Resources"], check=False)
     subprocess.run(["git", "branch", "-M", "main"], check=True)
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
-    print("\n✅✅ انتهى! استمتع بالنسخة الأسطورية.")
+    print("\n✅✅ تم حل مشكلة تكرار الموارد! البناء سينجح الآن.")
     print(f"🔗 {REPO_URL}/actions")
 except subprocess.CalledProcessError as e:
     print(f"\n❌ خطأ: {e}")

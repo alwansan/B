@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:background="@color/bg_secondary"
     android:padding="16dp">
-
     <TextView
         android:id="@+id/dialog_title"
         android:layout_width="match_parent"
@@ -16,7 +15,6 @@
         android:textStyle="bold"
         android:gravity="center"
         android:paddingBottom="10dp"/>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -40,7 +38,6 @@
             android:textColor="#FFF"
             android:layout_marginStart="5dp"/>
     </LinearLayout>
-
     <ListView
         android:id="@+id/list_data"
         android:layout_width="match_parent"
@@ -50,7 +47,6 @@
         android:divider="#333"
         android:dividerHeight="1dp"
         android:background="@color/bg_main"/>
-
     <Button
         android:id="@+id/btn_clear_history"
         android:layout_width="match_parent"

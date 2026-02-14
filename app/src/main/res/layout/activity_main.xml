@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_main">
-
     <LinearLayout
         android:id="@+id/ui_container"
         android:layout_width="match_parent"
@@ -11,15 +10,12 @@
         android:orientation="vertical"
         android:background="@color/bg_secondary"
         android:elevation="8dp">
-
-        <!-- شريط التبويبات -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:orientation="horizontal"
             android:paddingTop="4dp"
             android:paddingStart="4dp">
-            
             <HorizontalScrollView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -32,7 +28,6 @@
                     android:layout_height="match_parent"
                     android:orientation="horizontal"/>
             </HorizontalScrollView>
-
             <Button
                 android:id="@+id/btn_add_tab"
                 android:layout_width="44dp"
@@ -43,15 +38,12 @@
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center"/>
         </LinearLayout>
-
-        <!-- شريط العنوان والأدوات -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:gravity="center_vertical"
             android:padding="6dp"
             android:background="@color/bg_secondary">
-            
             <ImageButton
                 android:id="@+id/btn_menu"
                 android:layout_width="40dp"
@@ -59,7 +51,6 @@
                 android:src="@android:drawable/ic_menu_sort_by_size"
                 android:tint="#AAA"
                 android:background="?attr/selectableItemBackground"/>
-
             <ImageButton
                 android:id="@+id/btn_bookmark"
                 android:layout_width="40dp"
@@ -67,7 +58,6 @@
                 android:src="@android:drawable/star_off"
                 android:tint="#AAA"
                 android:background="?attr/selectableItemBackground"/>
-
             <EditText
                 android:id="@+id/url_input"
                 android:layout_width="0dp"
@@ -84,7 +74,6 @@
                 android:singleLine="true"
                 android:inputType="textUri"
                 android:imeOptions="actionGo|flagNoExtractUi"/>
-            
             <ImageButton
                 android:id="@+id/btn_go"
                 android:layout_width="40dp"
@@ -92,7 +81,6 @@
                 android:src="@android:drawable/ic_menu_send"
                 android:tint="@color/accent_neon"
                 android:background="?attr/selectableItemBackground"/>
-                
             <ImageButton
                 android:id="@+id/btn_settings"
                 android:layout_width="40dp"
@@ -102,7 +90,6 @@
                 android:background="?attr/selectableItemBackground"/>
         </LinearLayout>
     </LinearLayout>
-
     <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"

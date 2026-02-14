@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:background="@color/bg_secondary"
     android:padding="20dp">
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,17 +14,13 @@
         android:textStyle="bold"
         android:gravity="center"
         android:layout_marginBottom="20dp"/>
-
     <TextView android:text="Screen Resolution" android:textColor="#AAA" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
     <RadioGroup android:id="@+id/rg_resolution" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
         <RadioButton android:id="@+id/rb_720" android:text="720p (Mobile View)" android:textColor="#FFF"/>
         <RadioButton android:id="@+id/rb_1080" android:text="1080p (Desktop - Default)" android:textColor="#FFF"/>
         <RadioButton android:id="@+id/rb_4k" android:text="4K (Ultra Desktop)" android:textColor="#FFF"/>
     </RadioGroup>
-
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333" android:layout_marginVertical="15dp"/>
-
-    <!-- زر التاريخ موجود في النافذة الأخرى، هنا زر المسح فقط -->
     <Button
         android:id="@+id/btn_clear_data"
         android:layout_width="match_parent"

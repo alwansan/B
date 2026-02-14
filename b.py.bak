@@ -20,7 +20,6 @@ ASSETS_DIR = os.path.join(SRC_MAIN, "assets")
 DRAWABLE_DIR = os.path.join(RES_DIR, "drawable")
 LAYOUT_DIR = os.path.join(RES_DIR, "layout")
 VALUES_DIR = os.path.join(RES_DIR, "values")
-MIPMAP_DIR = os.path.join(RES_DIR, "mipmap") # للأيقونات
 
 def create_file(path, content):
     directory = os.path.dirname(path)
@@ -31,16 +30,13 @@ def create_file(path, content):
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
 
 # ==========================================
-# 1. معالجة الأيقونة (Custom PNG or Vector Eagle) 🦅
+# 1. معالجة الأيقونة 🦅
 # ==========================================
 def setup_icon():
-    # التحقق من وجود صورة مخصصة
     custom_icon = "icon.png"
     if os.path.exists(custom_icon):
         print("🦅 تم العثور على صورة مخصصة (icon.png)! جاري تحويلها لأيقونة...")
-        # هنا سنقوم بحيلة بسيطة: نسخها كـ drawable واستخدامها
-        # (ملاحظة: في الإنتاج الحقيقي نحتاج أدوات تحجيم، هنا سنعتمد على الأندرويد لعمل Scale)
-        dest = os.path.join(DRAWABLE_DIR, "ic_launcher_foreground.png")
+        dest = os.path.join(DRAWABLE_DIR, "ic_launcher.png") # حفظ كـ PNG مباشرة
         os.makedirs(DRAWABLE_DIR, exist_ok=True)
         shutil.copy(custom_icon, dest)
         return True
@@ -54,7 +50,6 @@ vector_eagle_xml = """
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path android:fillColor="#1a1f2c" android:pathData="M0,0h24v24h-24z"/>
-    <!-- جناح النسر -->
     <path android:fillColor="#00E5FF" android:pathData="M12,2 C6.48,2 2,6.48 2,12 C2,17.52 6.48,22 12,22 C17.52,22 22,17.52 22,12 C22,6.48 17.52,2 12,2 Z M12,20 C7.59,20 4,16.41 4,12 C4,7.59 7.59,4 12,4 C16.41,4 20,7.59 20,12 C20,16.41 16.41,20 12,20 Z"/>
     <path android:fillColor="#FFFFFF" android:pathData="M12,6 L9,14 L12,18 L15,14 L12,6 Z"/>
 </vector>
@@ -67,31 +62,25 @@ vector_eagle_xml = """
 colors_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg_main">#191A24</color> <!-- لون خلفية أوبرا جي اكس -->
+    <color name="bg_main">#191A24</color>
     <color name="bg_secondary">#242633</color>
     <color name="accent_neon">#00E5FF</color>
     <color name="accent_red">#FA2E4D</color>
     <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#A0A0A0</color>
     <color name="tab_active">#242633</color>
     <color name="tab_inactive">#15161E</color>
-    <color name="overlay_black">#AA000000</color>
 </resources>
 """
 
-# خلفية التبويب (حديثة)
 bg_tab_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- التبويب النشط -->
     <item android:state_selected="true">
         <shape>
             <solid android:color="@color/tab_active"/>
             <corners android:topLeftRadius="12dp" android:topRightRadius="12dp"/>
-            <stroke android:width="0dp" android:color="@transparent"/>
         </shape>
     </item>
-    <!-- التبويب غير النشط -->
     <item>
         <shape>
             <solid android:color="@color/tab_inactive"/>
@@ -101,7 +90,6 @@ bg_tab_xml = """
 </selector>
 """
 
-# خط ملون أسفل التبويب النشط (للمسة جمالية)
 bg_tab_indicator_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
@@ -119,7 +107,7 @@ bg_url_bar_xml = """
 </shape>
 """
 
-# تصميم نافذة المفضلات والسجل (Dialog)
+# تصميم نافذة المفضلات والسجل
 dialog_bookmarks_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -145,7 +133,6 @@ dialog_bookmarks_xml = """
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:weightSum="2">
-        
         <Button
             android:id="@+id/btn_view_bookmarks"
             android:layout_width="0dp"
@@ -153,9 +140,7 @@ dialog_bookmarks_xml = """
             android:layout_weight="1"
             android:text="Bookmarks"
             android:backgroundTint="@color/bg_main"
-            android:textColor="#FFF"
-            android:layout_marginEnd="5dp"/>
-            
+            android:textColor="#FFF"/>
         <Button
             android:id="@+id/btn_view_history"
             android:layout_width="0dp"
@@ -187,11 +172,49 @@ dialog_bookmarks_xml = """
         android:backgroundTint="#FA2E4D"
         android:visibility="gone"
         android:layout_marginTop="8dp"/>
-
 </LinearLayout>
 """
 
-# تصميم عنصر واحد في قائمة السجل (نظيف وعصري)
+# 🔥 هذا هو المتغير الذي كان مفقوداً (تصميم نافذة الإعدادات) 🔥
+dialog_settings_xml = """
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/bg_secondary"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Settings"
+        android:textColor="@color/accent_neon"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView android:text="Screen Resolution" android:textColor="#AAA" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+    <RadioGroup android:id="@+id/rg_resolution" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <RadioButton android:id="@+id/rb_720" android:text="720p (Mobile View)" android:textColor="#FFF"/>
+        <RadioButton android:id="@+id/rb_1080" android:text="1080p (Desktop - Default)" android:textColor="#FFF"/>
+        <RadioButton android:id="@+id/rb_4k" android:text="4K (Ultra Desktop)" android:textColor="#FFF"/>
+    </RadioGroup>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333" android:layout_marginVertical="15dp"/>
+
+    <!-- زر التاريخ موجود في النافذة الأخرى، هنا زر المسح فقط -->
+    <Button
+        android:id="@+id/btn_clear_data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Clear Cookies &amp; Cache"
+        android:backgroundTint="#FA2E4D"
+        android:layout_marginTop="10dp"/>
+</LinearLayout>
+"""
+
 item_list_row_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -199,29 +222,25 @@ item_list_row_xml = """
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="12dp">
-
     <TextView
         android:id="@+id/row_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Website Title"
+        android:text="Title"
         android:textColor="#FFF"
-        android:textSize="14sp"
         android:textStyle="bold"
         android:singleLine="true"/>
-
     <TextView
         android:id="@+id/row_url"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="https://google.com"
+        android:text="url"
         android:textColor="#888"
         android:textSize="12sp"
         android:singleLine="true"/>
 </LinearLayout>
 """
 
-# تصميم التبويب (Opera Style)
 item_tab_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -229,8 +248,6 @@ item_tab_xml = """
     android:layout_height="38dp"
     android:background="@drawable/bg_tab"
     android:layout_marginEnd="4dp">
-
-    <!-- شريط النيون الجانبي (للتفعيل) -->
     <View
         android:id="@+id/tab_indicator"
         android:layout_width="match_parent"
@@ -238,7 +255,6 @@ item_tab_xml = """
         android:layout_alignParentBottom="true"
         android:background="@color/accent_neon"
         android:visibility="invisible"/>
-
     <TextView
         android:id="@+id/tab_title"
         android:layout_width="match_parent"
@@ -250,7 +266,6 @@ item_tab_xml = """
         android:textColor="#E0E0E0"
         android:textSize="13sp"
         android:singleLine="true" />
-
     <ImageButton
         android:id="@+id/btn_close_tab"
         android:layout_width="28dp"
@@ -264,7 +279,6 @@ item_tab_xml = """
 </RelativeLayout>
 """
 
-# الواجهة الرئيسية
 activity_main_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -272,7 +286,6 @@ activity_main_xml = """
     android:layout_height="match_parent"
     android:background="@color/bg_main">
 
-    <!-- شريط الواجهة (يختفي بـ Ctrl+G) -->
     <LinearLayout
         android:id="@+id/ui_container"
         android:layout_width="match_parent"
@@ -321,17 +334,14 @@ activity_main_xml = """
             android:padding="6dp"
             android:background="@color/bg_secondary">
             
-            <!-- زر القوائم / المفضلات (مجلد) -->
             <ImageButton
                 android:id="@+id/btn_menu"
                 android:layout_width="40dp"
                 android:layout_height="match_parent"
                 android:src="@android:drawable/ic_menu_sort_by_size"
                 android:tint="#AAA"
-                android:background="?attr/selectableItemBackground"
-                android:tooltipText="History &amp; Bookmarks"/>
+                android:background="?attr/selectableItemBackground"/>
 
-            <!-- زر حفظ الصفحة (نجمة) -->
             <ImageButton
                 android:id="@+id/btn_bookmark"
                 android:layout_width="40dp"
@@ -340,7 +350,6 @@ activity_main_xml = """
                 android:tint="#AAA"
                 android:background="?attr/selectableItemBackground"/>
 
-            <!-- حقل البحث (مع منع الشاشة الكاملة) -->
             <EditText
                 android:id="@+id/url_input"
                 android:layout_width="0dp"
@@ -358,7 +367,6 @@ activity_main_xml = """
                 android:inputType="textUri"
                 android:imeOptions="actionGo|flagNoExtractUi"/>
             
-            <!-- زر GO -->
             <ImageButton
                 android:id="@+id/btn_go"
                 android:layout_width="40dp"
@@ -367,7 +375,6 @@ activity_main_xml = """
                 android:tint="@color/accent_neon"
                 android:background="?attr/selectableItemBackground"/>
                 
-            <!-- زر الإعدادات (ترس) -->
             <ImageButton
                 android:id="@+id/btn_settings"
                 android:layout_width="40dp"
@@ -383,7 +390,6 @@ activity_main_xml = """
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/ui_container"/>
-
 </RelativeLayout>
 """
 
@@ -447,8 +453,8 @@ android {{
         applicationId = "{PACKAGE_NAME}"
         minSdk = 26
         targetSdk = 34
-        versionCode = 14
-        versionName = "14.0-Opera-Eagle"
+        versionCode = 15
+        versionName = "15.0-Opera-Eagle"
     }}
 
     signingConfigs {{
@@ -484,7 +490,6 @@ dependencies {{
 }}
 """
 
-# 🔥 تم إجبار الوضع الأفقي (sensorLandscape) 🔥
 manifest = f"""
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -525,7 +530,7 @@ backup_rules = """<?xml version="1.0" encoding="utf-8"?><full-backup-content />"
 data_extraction = """<?xml version="1.0" encoding="utf-8"?><data-extraction-rules />"""
 
 # ==========================================
-# 4. كود Kotlin (المطور) 🧠
+# 4. كود Kotlin
 # ==========================================
 
 main_activity = f"""
@@ -538,7 +543,6 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -597,7 +601,6 @@ class MainActivity : AppCompatActivity() {{
         findViewById<ImageButton>(R.id.btn_go).setOnClickListener {{ loadUrl(urlInput.text.toString()) }}
         findViewById<ImageButton>(R.id.btn_settings).setOnClickListener {{ showSettingsDialog() }}
         
-        // زر المفضلات والقوائم (الجديد)
         btnMenu.setOnClickListener {{ showBookmarksDialog() }}
 
         btnBookmark.setOnClickListener {{
@@ -609,7 +612,6 @@ class MainActivity : AppCompatActivity() {{
             }}
         }}
 
-        // منع لوحة المفاتيح الكاملة (Full Screen IME)
         urlInput.imeOptions = EditorInfo.IME_ACTION_GO or EditorInfo.IME_FLAG_NO_EXTRACT_UI
         urlInput.setOnEditorActionListener {{ _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {{
@@ -744,10 +746,6 @@ class MainActivity : AppCompatActivity() {{
         addToHistoryLog(url)
     }}
 
-    // ==================
-    // 💾 Bookmarks & History UI
-    // ==================
-    
     private fun showBookmarksDialog() {{
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_bookmarks, null)
         val btnBookmarks = dialogView.findViewById<Button>(R.id.btn_view_bookmarks)
@@ -756,11 +754,8 @@ class MainActivity : AppCompatActivity() {{
         val btnClearHistory = dialogView.findViewById<Button>(R.id.btn_clear_history)
         val dialogTitle = dialogView.findViewById<TextView>(R.id.dialog_title)
 
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
-        // وظيفة لعرض القائمة بشكل جميل
         fun loadList(type: String) {{
             val listData = ArrayList<Map<String, String>>()
             
@@ -774,14 +769,12 @@ class MainActivity : AppCompatActivity() {{
                 dialogTitle.text = "⭐ Saved Bookmarks"
                 btnClearHistory.visibility = View.GONE
             }} else {{
-                // History
                 try {{
                     val lines = File(filesDir, "history.txt").readLines().reversed()
                     for(line in lines) {{
                         if(line.contains(": ")) {{
                             val parts = line.split(": ", limit = 2)
-                            // عرض الوقت أو العنوان كعنوان
-                            listData.add(mapOf("title" to "Visited Page", "url" to parts[1]))
+                            listData.add(mapOf("title" to "Visited", "url" to parts[1]))
                         }}
                     }}
                 }} catch(e: Exception) {{}}
@@ -795,7 +788,6 @@ class MainActivity : AppCompatActivity() {{
             ) {{}}
             
             listView.adapter = adapter
-            
             listView.setOnItemClickListener {{ _, _, position, _ ->
                 val url = listData[position]["url"]
                 if(url != null) loadUrl(url)
@@ -803,9 +795,7 @@ class MainActivity : AppCompatActivity() {{
             }}
         }}
 
-        // الافتراضي: المفضلات
         loadList("bookmarks")
-
         btnBookmarks.setOnClickListener {{ loadList("bookmarks") }}
         btnHistory.setOnClickListener {{ loadList("history") }}
         
@@ -814,7 +804,6 @@ class MainActivity : AppCompatActivity() {{
             loadList("history")
             Toast.makeText(this, "History Cleared", Toast.LENGTH_SHORT).show()
         }}
-
         dialog.show()
     }}
 
@@ -834,20 +823,17 @@ class MainActivity : AppCompatActivity() {{
         try {{ File(filesDir, "history.txt").appendText("${{System.currentTimeMillis()}}: $url\\n") }} catch (e: Exception) {{}}
     }}
     
-    // ==================
-    // الإعدادات (Settings Dialog)
-    // ==================
     private fun showSettingsDialog() {{
-        // (تم تبسيط هذا الديالوج لاستخدام الديالوج الجديد الموحد، لكن سنبقي الإعدادات العامة هنا)
-        // ... (الكود السابق للإعدادات)
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_settings, null)
-        // ... (نفس المنطق السابق لتغيير الدقة)
         val rgResolution = dialogView.findViewById<RadioGroup>(R.id.rg_resolution)
+        val btnClear = dialogView.findViewById<Button>(R.id.btn_clear_data)
+
         when(currentResolution) {{
             "720" -> rgResolution.check(R.id.rb_720)
             "4K" -> rgResolution.check(R.id.rb_4k)
             else -> rgResolution.check(R.id.rb_1080)
         }}
+
         val dialog = AlertDialog.Builder(this).setView(dialogView).create()
         rgResolution.setOnCheckedChangeListener {{ _, checkedId ->
             val newRes = when(checkedId) {{ R.id.rb_720 -> "720" ; R.id.rb_4k -> "4K" ; else -> "1080" }}
@@ -855,20 +841,20 @@ class MainActivity : AppCompatActivity() {{
             getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE).edit().putString("resolution", newRes).apply()
             Toast.makeText(this, "Restart tabs to apply.", Toast.LENGTH_SHORT).show()
         }}
-        // تم إخفاء أزرار التاريخ القديمة لأننا وضعناها في الزر الجديد
-        dialogView.findViewById<Button>(R.id.btn_show_history).visibility = View.GONE
+        
+        btnClear.setOnClickListener {{
+            geckoRuntime.storageController.clearData(org.mozilla.geckoview.StorageController.ClearFlags.ALL)
+            File(filesDir, "history.txt").delete()
+            Toast.makeText(this, "All Data Cleared!", Toast.LENGTH_SHORT).show()
+        }}
         dialog.show()
     }}
 
-    // ==================
-    // 👻 وضع الشبح المطور (Full Immersive)
-    // ==================
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {{
         if (event.action == KeyEvent.ACTION_DOWN && event.isCtrlPressed && event.keyCode == KeyEvent.KEYCODE_G) {{
             isGhostMode = !isGhostMode
             if (isGhostMode) {{
                 uiContainer.visibility = View.GONE
-                // إخفاء كامل للشريط العلوي والسفلي (Status + Nav)
                 window.decorView.systemUiVisibility = (
                         View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -885,7 +871,6 @@ class MainActivity : AppCompatActivity() {{
         return super.dispatchKeyEvent(event)
     }}
 
-    // ... (دوال الحفظ والاستعادة)
     override fun onPause() {{
         super.onPause()
         val prefs = getSharedPreferences("BrowserState", Context.MODE_PRIVATE).edit()
@@ -953,7 +938,7 @@ jobs:
 # ==========================================
 # التنفيذ
 # ==========================================
-print("🚀 بدء بناء نسخة B-Eagle (Opera Style + Landscape + Bookmarks)...")
+print("🚀 بدء بناء نسخة B-Eagle (Fixed Dialog XML)...")
 
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
@@ -964,26 +949,18 @@ create_file("app/src/main/AndroidManifest.xml", manifest)
 create_file("app/src/main/res/xml/backup_rules.xml", backup_rules)
 create_file("app/src/main/res/xml/data_extraction_rules.xml", data_extraction)
 
-# الأيقونات (فحص إذا كانت هناك صورة مخصصة)
+# الأيقونات
 has_custom = setup_icon()
 if not has_custom:
-    # استخدام أيقونة النسر الفيكتور
     os.makedirs(DRAWABLE_DIR, exist_ok=True)
     create_file(os.path.join(DRAWABLE_DIR, "ic_launcher.xml"), vector_eagle_xml)
-    # تحديث المانيفست لاستخدام الفيكتور في حالة عدم وجود صورة
-    # (المانيفست الحالي يشير إلى ic_launcher وهو يعمل في كلتا الحالتين إذا سمينا الفيكتور كذلك)
 
-os.makedirs(ASSETS_DIR, exist_ok=True)
-# home.html من الكود السابق (سنستخدمه نفسه)
-# ... (ملاحظة: تأكد من أن متغير home_html معرف في الأعلى، الكود السابق يحتوي عليه)
-# سنقوم بتوليد home_html فارغ هنا للتذكير، يجب نسخ المحتوى السابق إذا لم يكن موجوداً
-# ولكن في هذا السكربت المجمع، سأعيد تعريف home_html باختصار للتأكيد
-# (تم حذفه من الأعلى لتوفير المساحة، سأضيفه الآن)
+# الصفحة الرئيسية الجديدة (Dark Particle)
 home_html_fixed = """
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Start</title><style>body{margin:0;overflow:hidden;background-color:#191A24;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white}h1{font-size:80px;margin-bottom:20px;color:#fff;letter-spacing:-2px}h1 span{color:#00E5FF}input{width:600px;padding:16px 25px;border-radius:40px;border:none;background:#242633;color:white;font-size:18px;outline:none;box-shadow:0 10px 30px rgba(0,0,0,0.3)}input:focus{box-shadow:0 0 0 2px #00E5FF}</style></head><body><h1>B<span>-</span>Eagle</h1><form action="https://www.google.com/search" method="GET"><input type="text" name="q" placeholder="Search web..." autofocus></form></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>New Tab</title><style>body{margin:0;overflow:hidden;background-color:#191A24;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white}h1{font-size:90px;margin-bottom:20px;color:#fff;letter-spacing:-3px;font-weight:bold}h1 span{color:#00E5FF}input{width:600px;padding:20px 30px;border-radius:50px;border:none;background:#242633;color:white;font-size:20px;outline:none;box-shadow:0 10px 40px rgba(0,0,0,0.4);transition:0.3s}input:focus{box-shadow:0 0 0 2px #00E5FF;transform:scale(1.02)}</style></head><body><h1>B<span>-</span>Eagle</h1><form action="https://www.google.com/search" method="GET"><input type="text" name="q" placeholder="Search web..." autofocus autocomplete="off"></form></body></html>
 """
+os.makedirs(ASSETS_DIR, exist_ok=True)
 create_file(os.path.join(ASSETS_DIR, "home.html"), home_html_fixed)
-
 
 os.makedirs(VALUES_DIR, exist_ok=True)
 create_file(os.path.join(VALUES_DIR, "colors.xml"), colors_xml)
@@ -996,6 +973,7 @@ create_file(os.path.join(DRAWABLE_DIR, "bg_tab_indicator.xml"), bg_tab_indicator
 os.makedirs(LAYOUT_DIR, exist_ok=True)
 create_file(os.path.join(LAYOUT_DIR, "activity_main.xml"), activity_main_xml)
 create_file(os.path.join(LAYOUT_DIR, "item_tab.xml"), item_tab_xml)
+# 🔥 هنا الإصلاح: تم تعريف وكتابة dialog_settings.xml 🔥
 create_file(os.path.join(LAYOUT_DIR, "dialog_settings.xml"), dialog_settings_xml)
 create_file(os.path.join(LAYOUT_DIR, "dialog_bookmarks.xml"), dialog_bookmarks_xml)
 create_file(os.path.join(LAYOUT_DIR, "item_list_row.xml"), item_list_row_xml)
@@ -1004,7 +982,7 @@ os.makedirs(JAVA_DIR, exist_ok=True)
 create_file(os.path.join(JAVA_DIR, "MainActivity.kt"), main_activity)
 create_file(".github/workflows/build.yml", github_workflow)
 
-print("✅ تم بناء جميع الملفات (بما في ذلك واجهة المفضلات والقوائم الجديدة).")
+print("✅ تم بناء جميع الملفات.")
 print("🔄 جاري الرفع إلى GitHub...")
 
 try:
@@ -1016,10 +994,10 @@ try:
     except subprocess.CalledProcessError:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Major Update: Opera Style UI, Landscape, Bookmarks, History"], check=False)
+    subprocess.run(["git", "commit", "-m", "Final Fix: Missing Variable + Opera UI"], check=False)
     subprocess.run(["git", "branch", "-M", "main"], check=True)
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
-    print("\n✅✅ استمتع بالنسخة الأسطورية! لا تنس وضع icon.png إذا أردت أيقونة خاصة.")
+    print("\n✅✅ انتهى! استمتع بالنسخة الأسطورية.")
     print(f"🔗 {REPO_URL}/actions")
 except subprocess.CalledProcessError as e:
     print(f"\n❌ خطأ: {e}")
