@@ -15,7 +15,7 @@ APP_DIR = os.path.join(BASE_DIR, "app")
 SRC_MAIN = os.path.join(APP_DIR, "src", "main")
 JAVA_DIR = os.path.join(SRC_MAIN, "java", "com", "alwansan", "b")
 RES_DIR = os.path.join(SRC_MAIN, "res")
-ASSETS_DIR = os.path.join(SRC_MAIN, "assets") # مجلد الأصول
+ASSETS_DIR = os.path.join(SRC_MAIN, "assets") 
 DRAWABLE_DIR = os.path.join(RES_DIR, "drawable")
 LAYOUT_DIR = os.path.join(RES_DIR, "layout")
 VALUES_DIR = os.path.join(RES_DIR, "values")
@@ -29,7 +29,7 @@ def create_file(path, content):
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
 
 # ==========================================
-# 1. صفحة البداية المحلية (Home Page) 🏠
+# 1. صفحة البداية المحلية (Home Page) 
 # ==========================================
 home_html = """
 <!DOCTYPE html>
@@ -37,173 +37,130 @@ home_html = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Tab</title>
+    <title>Start</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #121212;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            color: white;
-        }
+        body { margin: 0; overflow: hidden; background-color: #121212; font-family: sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
         #bgCanvas { position: absolute; top: 0; left: 0; z-index: 0; }
-        .content { z-index: 1; text-align: center; width: 100%; max-width: 700px; animation: popIn 0.8s ease; }
-        h1 { font-size: 90px; margin: 0; letter-spacing: -3px; color: #e0e0e0; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .container { z-index: 1; text-align: center; width: 90%; max-width: 600px; }
+        h1 { font-size: 80px; margin-bottom: 20px; color: #e0e0e0; }
         h1 span { color: #00E5FF; }
-        .search-container {
-            margin-top: 30px;
-            position: relative;
-            width: 100%;
-        }
         input {
-            width: 100%;
-            padding: 18px 30px;
-            border-radius: 50px;
-            border: 2px solid #333;
-            background: rgba(30, 30, 30, 0.8);
-            color: white;
-            font-size: 20px;
-            outline: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: 0.3s;
+            width: 100%; padding: 15px 25px; border-radius: 30px; border: 1px solid #444;
+            background: rgba(30, 30, 30, 0.9); color: white; font-size: 18px; outline: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        input:focus {
-            border-color: #00E5FF;
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
-            background: #1E1E1E;
-        }
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        input:focus { border-color: #00E5FF; box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); }
     </style>
 </head>
 <body>
     <canvas id="bgCanvas"></canvas>
-    <div class="content">
-        <h1>G<span>oo</span>gle</h1>
-        <div class="search-container">
-            <form action="https://www.google.com/search" method="GET">
-                <input type="text" name="q" placeholder="Search Google or type URL..." autofocus autocomplete="off">
-            </form>
-        </div>
+    <div class="container">
+        <h1>B<span>-</span>Browser</h1>
+        <form action="https://www.google.com/search" method="GET">
+            <input type="text" name="q" placeholder="Search or type URL..." autocomplete="off" autofocus>
+        </form>
     </div>
     <script>
         const canvas = document.getElementById('bgCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         let particles = [];
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2;
-                this.speedX = Math.random() * 1 - 0.5;
-                this.speedY = Math.random() * 1 - 0.5;
-            }
-            update() {
-                this.x += this.speedX; this.y += this.speedY;
-                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
-                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
-            }
-            draw() {
-                ctx.fillStyle = '#00E5FF'; ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-            }
-        }
-        function init() { for (let i = 0; i < 100; i++) particles.push(new Particle()); }
+        for(let i=0; i<80; i++) particles.push({
+            x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+            vx: (Math.random()-0.5)*1, vy: (Math.random()-0.5)*1, size: Math.random()*2
+        });
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update(); particles[i].draw();
-                for (let j = i; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 100) {
-                        ctx.strokeStyle = `rgba(0, 229, 255, ${1 - distance/100})`;
-                        ctx.lineWidth = 0.5; ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = '#00E5FF';
+            particles.forEach(p => {
+                p.x+=p.vx; p.y+=p.vy;
+                if(p.x<0||p.x>canvas.width) p.vx*=-1;
+                if(p.y<0||p.y>canvas.height) p.vy*=-1;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            });
+            // Lines
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.1)';
+            for(let i=0; i<particles.length; i++) {
+                for(let j=i; j<particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    if(Math.sqrt(dx*dx+dy*dy) < 100) {
+                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
                     }
                 }
             }
             requestAnimationFrame(animate);
         }
-        init(); animate();
-        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+        animate();
     </script>
 </body>
 </html>
 """
 
 # ==========================================
-# 2. ملفات التصميم (UI)
+# 2. ملفات التصميم
 # ==========================================
 
 colors_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background_dark">#000000</color>
+    <color name="background_dark">#121212</color>
     <color name="surface_gray">#1E1E1E</color>
-    <color name="tab_selected">#333333</color>
+    <color name="tab_selected">#323232</color>
     <color name="tab_unselected">#121212</color>
     <color name="neon_blue">#00E5FF</color>
     <color name="text_white">#FFFFFF</color>
 </resources>
 """
 
-# خلفية التبويب (Tab Background)
 bg_tab_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
         <shape>
             <solid android:color="@color/tab_selected"/>
-            <corners android:topLeftRadius="12dp" android:topRightRadius="12dp"/>
+            <corners android:topLeftRadius="8dp" android:topRightRadius="8dp"/>
             <stroke android:width="2dp" android:color="@color/neon_blue"/>
         </shape>
     </item>
     <item>
         <shape>
             <solid android:color="@color/tab_unselected"/>
-            <corners android:topLeftRadius="12dp" android:topRightRadius="12dp"/>
+            <corners android:topLeftRadius="8dp" android:topRightRadius="8dp"/>
             <stroke android:width="1dp" android:color="#33FFFFFF"/>
         </shape>
     </item>
 </selector>
 """
 
-# شكل شريط العنوان
 bg_url_bar_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <solid android:color="#2C2C2C"/>
-    <corners android:radius="8dp"/>
+    <corners android:radius="20dp"/>
+    <stroke android:width="1dp" android:color="#444"/>
 </shape>
 """
 
-# تصميم العنصر الواحد في شريط التبويبات (Item Tab)
 item_tab_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="160dp"
-    android:layout_height="40dp"
+    android:layout_width="150dp"
+    android:layout_height="38dp"
     android:background="@drawable/bg_tab"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="8dp"
-    android:paddingEnd="4dp"
-    android:layout_marginEnd="4dp">
+    android:paddingStart="10dp"
+    android:paddingEnd="5dp"
+    android:layout_marginEnd="2dp">
 
     <TextView
         android:id="@+id/tab_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="New Tab"
+        android:text="Loading..."
         android:textColor="#FFFFFF"
         android:textSize="12sp"
         android:singleLine="true"
@@ -211,15 +168,14 @@ item_tab_xml = """
 
     <ImageButton
         android:id="@+id/btn_close_tab"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:tint="#88FFFFFF" />
+        android:tint="#AAAAAA" />
 </LinearLayout>
 """
 
-# الواجهة الرئيسية
 activity_main_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -227,21 +183,21 @@ activity_main_xml = """
     android:layout_height="match_parent"
     android:background="@color/background_dark">
 
-    <!-- حاوية عناصر التحكم العلوية (تختفي بـ Ctrl+G) -->
+    <!-- شريط الأدوات العلوي -->
     <LinearLayout
         android:id="@+id/ui_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#121212"
-        android:elevation="4dp">
+        android:elevation="6dp">
 
-        <!-- شريط التبويبات -->
+        <!-- منطقة التبويبات -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="40dp"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:paddingTop="2dp">
             
             <HorizontalScrollView
                 android:layout_width="0dp"
@@ -249,33 +205,30 @@ activity_main_xml = """
                 android:layout_weight="1"
                 android:fillViewport="true"
                 android:scrollbars="none">
-                
                 <LinearLayout
                     android:id="@+id/tabs_container"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:paddingTop="4dp"/>
+                    android:orientation="horizontal"/>
             </HorizontalScrollView>
 
-            <!-- زر إضافة تبويب -->
             <Button
                 android:id="@+id/btn_add_tab"
-                android:layout_width="44dp"
+                android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:text="+"
-                android:textSize="20sp"
-                android:background="?attr/selectableItemBackground"
-                android:textColor="@color/neon_blue" />
+                android:textSize="22sp"
+                android:textColor="@color/neon_blue"
+                android:background="?attr/selectableItemBackground" />
         </LinearLayout>
 
         <!-- شريط العنوان -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:padding="8dp"
-            android:background="#1E1E1E"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:padding="6dp"
+            android:background="#1E1E1E">
             
             <EditText
                 android:id="@+id/url_input"
@@ -283,17 +236,18 @@ activity_main_xml = """
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/bg_url_bar"
-                android:hint="Search Google or enter URL..."
-                android:paddingStart="12dp"
+                android:hint="Search or enter address"
+                android:paddingStart="16dp"
                 android:textColor="#FFF"
                 android:textColorHint="#888"
                 android:textSize="14sp"
                 android:singleLine="true"
-                android:imeOptions="actionSearch"/>
-
+                android:inputType="textUri"
+                android:imeOptions="actionGo"/>
+            
             <Button
                 android:id="@+id/btn_go"
-                android:layout_width="60dp"
+                android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:text="GO"
                 android:textColor="@color/neon_blue"
@@ -302,7 +256,6 @@ activity_main_xml = """
         </LinearLayout>
     </LinearLayout>
 
-    <!-- منطقة عرض المتصفح -->
     <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"
@@ -312,14 +265,13 @@ activity_main_xml = """
 </RelativeLayout>
 """
 
-# أيقونة التطبيق (محدثة)
 ic_launcher_xml = """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#000000" android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#121212" android:pathData="M0,0h108v108h-108z"/>
     <path android:fillColor="#00E5FF" android:pathData="M30,30h48v48h-48z"/>
     <path android:fillColor="#FFFFFF" android:pathData="M40,40h28v28h-28z"/>
 </vector>
@@ -385,8 +337,8 @@ android {{
         applicationId = "{PACKAGE_NAME}"
         minSdk = 26
         targetSdk = 34
-        versionCode = 10
-        versionName = "10.0-MultiTab"
+        versionCode = 11
+        versionName = "11.0-Persistent"
     }}
 
     signingConfigs {{
@@ -429,6 +381,8 @@ manifest = f"""
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -459,28 +413,26 @@ backup_rules = """<?xml version="1.0" encoding="utf-8"?><full-backup-content />"
 data_extraction = """<?xml version="1.0" encoding="utf-8"?><data-extraction-rules />"""
 
 # ==========================================
-# 4. كود Kotlin (إدارة التبويبات المعقدة)
+# 4. كود Kotlin (المنطق الكامل) 🧠
 # ==========================================
 
 main_activity = f"""
 package {PACKAGE_NAME}
 
-import android.graphics.Color
+import android.content.Context
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoView
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {{
 
@@ -490,178 +442,210 @@ class MainActivity : AppCompatActivity() {{
     private lateinit var urlInput: EditText
     private lateinit var uiContainer: LinearLayout
 
-    // قائمة الجلسات (التبويبات)
     private val sessions = ArrayList<TabSession>()
     private var currentTabIndex = -1
     private var isGhostMode = false
+    private val HOME_FILE_NAME = "home.html"
+    private lateinit var homeUrl: String
 
-    // كلاس لتخزين بيانات كل تبويب
     data class TabSession(
         val session: GeckoSession,
         val tabView: View,
-        var title: String = "New Tab"
+        var currentUrl: String = ""
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {{
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // 1. تجهيز ملف الواجهة محلياً (حل مشكلة File Not Found)
+        setupLocalHomeFile()
+
         geckoView = findViewById(R.id.gecko_view)
         tabsContainer = findViewById(R.id.tabs_container)
         urlInput = findViewById(R.id.url_input)
         uiContainer = findViewById(R.id.ui_container)
-        
-        val btnAddTab: Button = findViewById(R.id.btn_add_tab)
-        val btnGo: Button = findViewById(R.id.btn_go)
 
-        // إعداد المحرك مرة واحدة
+        // 2. إعداد المحرك
         geckoRuntime = GeckoRuntime.create(this)
 
-        // زر إضافة تبويب جديد
-        btnAddTab.setOnClickListener {{
-            addNewTab()
-        }}
-
-        // زر البحث
-        btnGo.setOnClickListener {{
-            loadUrl(urlInput.text.toString())
-        }}
+        findViewById<Button>(R.id.btn_add_tab).setOnClickListener {{ addNewTab(homeUrl) }}
+        findViewById<Button>(R.id.btn_go).setOnClickListener {{ loadUrl(urlInput.text.toString()) }}
 
         urlInput.setOnEditorActionListener {{ _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_GO) {{
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {{
                 loadUrl(urlInput.text.toString())
                 true
-            }} else {{
-                false
-            }}
+            }} else {{ false }}
         }}
 
-        // إضافة التبويب الأول تلقائياً
-        addNewTab()
+        // 3. استعادة التبويبات السابقة (Persistent Tabs)
+        restoreTabs()
     }}
 
-    private fun addNewTab() {{
-        // إعدادات الجلسة (Desktop Mode)
+    private fun setupLocalHomeFile() {{
+        // نسخ ملف home.html من assets إلى الذاكرة الداخلية للهاتف
+        val file = File(filesDir, HOME_FILE_NAME)
+        if (!file.exists()) {{
+            try {{
+                assets.open(HOME_FILE_NAME).use {{ input ->
+                    FileOutputStream(file).use {{ output ->
+                        input.copyTo(output)
+                    }}
+                }}
+            }} catch (e: Exception) {{
+                e.printStackTrace()
+            }}
+        }}
+        homeUrl = "file://" + file.absolutePath
+    }}
+
+    private fun addNewTab(urlToLoad: String) {{
         val settings = GeckoSessionSettings.Builder()
-            .usePrivateMode(false)
+            .usePrivateMode(false) // حفظ الكوكيز والبيانات
             .viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
-            .userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
+            // 🔥 تغيير UserAgent إلى Firefox Desktop (يحل مشكلة Google Captcha) 🔥
+            .userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
             .build()
 
         val session = GeckoSession(settings)
         session.open(geckoRuntime)
 
-        // إنشاء زر التبويب في الشريط
         val tabView = LayoutInflater.from(this).inflate(R.layout.item_tab, tabsContainer, false)
         val tabTitle = tabView.findViewById<TextView>(R.id.tab_title)
         val btnClose = tabView.findViewById<ImageButton>(R.id.btn_close_tab)
 
-        val newTabSession = TabSession(session, tabView)
-        sessions.add(newTabSession)
+        val newTab = TabSession(session, tabView, urlToLoad)
+        sessions.add(newTab)
+        
         val newIndex = sessions.size - 1
 
-        // برمجة الضغط على التبويب
-        tabView.setOnClickListener {{
-            switchToTab(sessions.indexOf(newTabSession))
-        }}
-
-        // برمجة زر الإغلاق (x)
-        btnClose.setOnClickListener {{
-            closeTab(sessions.indexOf(newTabSession))
-        }}
-
-        // إضافة التبويب للشريط
+        tabView.setOnClickListener {{ switchToTab(sessions.indexOf(newTab)) }}
+        btnClose.setOnClickListener {{ closeTab(sessions.indexOf(newTab)) }}
+        
         tabsContainer.addView(tabView)
-
-        // الانتقال للتبويب الجديد
         switchToTab(newIndex)
-
-        // تحميل الصفحة الرئيسية
-        // استخدام file:///android_asset/ هو الصحيح لـ GeckoView
-        session.loadUri("file:///android_asset/home.html")
+        
+        session.loadUri(urlToLoad)
     }}
 
     private fun switchToTab(index: Int) {{
         if (index !in sessions.indices) return
-
         currentTabIndex = index
-        val tabSession = sessions[index]
+        val tab = sessions[index]
+        geckoView.setSession(tab.session)
 
-        // ربط الجلسة بالمتصفح (هذا لا يغلق الجلسات الأخرى، فقط يخفيها)
-        geckoView.setSession(tabSession.session)
-
-        // تحديث تصميم الشريط (تمييز التبويب النشط)
         for (i in sessions.indices) {{
             sessions[i].tabView.isSelected = (i == index)
         }}
-
-        // تحديث شريط العنوان (إذا لم تكن الصفحة الرئيسية)
-        // (يمكن تطوير هذا الجزء لاحقاً لجلب العنوان الحقيقي)
-        urlInput.setText("") 
-        urlInput.hint = "Search Google..."
+        
+        // تحديث شريط العنوان (بدون بروتوكول للتجميل)
+        // في التطبيق الحقيقي سنستمع لتغيرات الرابط
     }}
 
     private fun closeTab(index: Int) {{
         if (index !in sessions.indices) return
-
-        val tabSession = sessions[index]
-        
-        // إغلاق الجلسة لتوفير الذاكرة
-        tabSession.session.close()
-        
-        // حذف من الواجهة والقائمة
-        tabsContainer.removeView(tabSession.tabView)
+        val tab = sessions[index]
+        tab.session.close()
+        tabsContainer.removeView(tab.tabView)
         sessions.removeAt(index)
 
         if (sessions.isEmpty()) {{
-            // إذا أغلق آخر تبويب، افتح واحداً جديداً
-            addNewTab()
+            addNewTab(homeUrl)
         }} else {{
-            // الانتقال للتبويب السابق
-            val nextIndex = if (index > 0) index - 1 else 0
-            switchToTab(nextIndex)
+            switchToTab(if (index > 0) index - 1 else 0)
         }}
     }}
 
     private fun loadUrl(input: String) {{
         if (currentTabIndex == -1) return
         val session = sessions[currentTabIndex].session
-        
         var url = input.trim()
         if (url.isEmpty()) return
 
-        // التحقق هل هو رابط أم بحث
         if (url.contains(" ") || !url.contains(".")) {{
-            // بحث جوجل
             url = "https://www.google.com/search?q=$url"
-        }} else if (!url.startsWith("http")) {{
-            // إضافة https
+        }} else if (!url.startsWith("http") && !url.startsWith("file")) {{
             url = "https://$url"
         }}
         
+        // تحديث الرابط الحالي في الذاكرة للحفظ
+        sessions[currentTabIndex].currentUrl = url
         session.loadUri(url)
+        
+        // 🔥 تسجيل في السجل (History Log) 🔥
+        addToHistoryLog(url)
     }}
 
-    // اختصار Ctrl+G
+    // ==================
+    // 💾 نظام الحفظ والاستعادة
+    // ==================
+    
+    override fun onPause() {{
+        super.onPause()
+        saveTabsState()
+    }}
+
+    private fun saveTabsState() {{
+        val prefs = getSharedPreferences("BrowserState", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        
+        // حفظ عدد التبويبات
+        editor.putInt("tab_count", sessions.size)
+        
+        // حفظ رابط كل تبويب (نحاول جلب الرابط الحقيقي من المحرك)
+        for (i in sessions.indices) {{
+            // ملاحظة: loader.uri قد لا يكون محدثاً فوراً، لذا نعتمد على ما طلبناه مبدئياً
+            // أو يمكن تحسينه لاحقاً بـ ProgressDelegate
+            var url = sessions[i].currentUrl
+            if (url.isEmpty()) url = homeUrl
+            editor.putString("tab_$i", url)
+        }}
+        editor.putInt("last_index", currentTabIndex)
+        editor.apply()
+    }}
+
+    private fun restoreTabs() {{
+        val prefs = getSharedPreferences("BrowserState", Context.MODE_PRIVATE)
+        val count = prefs.getInt("tab_count", 0)
+        
+        if (count > 0) {{
+            for (i in 0 until count) {{
+                val url = prefs.getString("tab_$i", homeUrl) ?: homeUrl
+                addNewTab(url)
+            }}
+            val lastIndex = prefs.getInt("last_index", 0)
+            switchToTab(lastIndex)
+        }} else {{
+            // فتح صفحة واحدة افتراضية
+            addNewTab(homeUrl)
+        }}
+    }}
+
+    private fun addToHistoryLog(url: String) {{
+        // حفظ بسيط في ملف نصي
+        try {{
+            val file = File(filesDir, "history.txt")
+            file.appendText(System.currentTimeMillis().toString() + ": " + url + "\\n")
+        }} catch (e: Exception) {{}}
+    }}
+
+    // ==================
+    // 👻 وضع الشبح (Ctrl+G)
+    // ==================
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {{
         if (event.action == KeyEvent.ACTION_DOWN && event.isCtrlPressed && event.keyCode == KeyEvent.KEYCODE_G) {{
-            toggleGhostMode()
+            isGhostMode = !isGhostMode
+            if (isGhostMode) {{
+                uiContainer.visibility = View.GONE
+                window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+            }} else {{
+                uiContainer.visibility = View.VISIBLE
+                window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+            }}
             return true
         }}
         return super.dispatchKeyEvent(event)
-    }}
-
-    private fun toggleGhostMode() {{
-        isGhostMode = !isGhostMode
-        if (isGhostMode) {{
-            uiContainer.visibility = View.GONE
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-        }} else {{
-            uiContainer.visibility = View.VISIBLE
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-        }}
     }}
 }}
 """
@@ -703,14 +687,14 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: B-Browser-MultiTab
+        name: B-Browser-Persistent
         path: app/build/outputs/apk/release/*.apk
 """
 
 # ==========================================
 # التنفيذ
 # ==========================================
-print("🚀 بدء بناء المتصفح متعدد التبويبات (B-Browser Multi-Tab)...")
+print("🚀 بدء بناء النسخة النهائية (إصلاح شامل: Google + الملفات + الحفظ)...")
 
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
@@ -721,11 +705,11 @@ create_file("app/src/main/AndroidManifest.xml", manifest)
 create_file("app/src/main/res/xml/backup_rules.xml", backup_rules)
 create_file("app/src/main/res/xml/data_extraction_rules.xml", data_extraction)
 
-# إنشاء صفحة الويب المحلية
+# صفحة الواجهة
 os.makedirs(ASSETS_DIR, exist_ok=True)
 create_file(os.path.join(ASSETS_DIR, "home.html"), home_html)
 
-# ملفات التصميم
+# الموارد
 os.makedirs(VALUES_DIR, exist_ok=True)
 create_file(os.path.join(VALUES_DIR, "colors.xml"), colors_xml)
 os.makedirs(DRAWABLE_DIR, exist_ok=True)
@@ -741,7 +725,7 @@ os.makedirs(JAVA_DIR, exist_ok=True)
 create_file(os.path.join(JAVA_DIR, "MainActivity.kt"), main_activity)
 create_file(".github/workflows/build.yml", github_workflow)
 
-print("✅ تم بناء نظام التبويبات بالكامل وإصلاح ملف الـ assets.")
+print("✅ تم تجهيز الكود: UserAgent جديد، نظام حفظ التبويبات، وإصلاح assets.")
 print("🔄 جاري الرفع إلى GitHub...")
 
 try:
@@ -755,7 +739,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Feature: Multi-Tabs, Google Search, Asset Fix"], check=False)
+    subprocess.run(["git", "commit", "-m", "Fix: Google Captcha, Missing File, and Tab Persistence"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -763,7 +747,10 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ مبروك! التطبيق الآن متصفح حقيقي (Tabs + PC Mode).")
+    print("\n✅✅ الحلول المطبقة:")
+    print("1. تغيير الهوية إلى Firefox Desktop لمنع حظر جوجل.")
+    print("2. نسخ home.html للذاكرة الداخلية لحل مشكلة 'File not found'.")
+    print("3. نظام حفظ تلقائي للتبويبات عند الخروج.")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:

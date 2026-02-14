@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="160dp"
-    android:layout_height="40dp"
+    android:layout_width="150dp"
+    android:layout_height="38dp"
     android:background="@drawable/bg_tab"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="8dp"
-    android:paddingEnd="4dp"
-    android:layout_marginEnd="4dp">
+    android:paddingStart="10dp"
+    android:paddingEnd="5dp"
+    android:layout_marginEnd="2dp">
 
     <TextView
         android:id="@+id/tab_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="New Tab"
+        android:text="Loading..."
         android:textColor="#FFFFFF"
         android:textSize="12sp"
         android:singleLine="true"
@@ -22,9 +22,9 @@
 
     <ImageButton
         android:id="@+id/btn_close_tab"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:tint="#88FFFFFF" />
+        android:tint="#AAAAAA" />
 </LinearLayout>

@@ -11,8 +11,8 @@ android {
         applicationId = "com.alwansan.b"
         minSdk = 26
         targetSdk = 34
-        versionCode = 10
-        versionName = "10.0-MultiTab"
+        versionCode = 11
+        versionName = "11.0-Persistent"
     }
 
     signingConfigs {

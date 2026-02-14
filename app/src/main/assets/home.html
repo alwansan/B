@@ -3,103 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Tab</title>
+    <title>Start</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #121212;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            color: white;
-        }
+        body { margin: 0; overflow: hidden; background-color: #121212; font-family: sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
         #bgCanvas { position: absolute; top: 0; left: 0; z-index: 0; }
-        .content { z-index: 1; text-align: center; width: 100%; max-width: 700px; animation: popIn 0.8s ease; }
-        h1 { font-size: 90px; margin: 0; letter-spacing: -3px; color: #e0e0e0; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .container { z-index: 1; text-align: center; width: 90%; max-width: 600px; }
+        h1 { font-size: 80px; margin-bottom: 20px; color: #e0e0e0; }
         h1 span { color: #00E5FF; }
-        .search-container {
-            margin-top: 30px;
-            position: relative;
-            width: 100%;
-        }
         input {
-            width: 100%;
-            padding: 18px 30px;
-            border-radius: 50px;
-            border: 2px solid #333;
-            background: rgba(30, 30, 30, 0.8);
-            color: white;
-            font-size: 20px;
-            outline: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: 0.3s;
+            width: 100%; padding: 15px 25px; border-radius: 30px; border: 1px solid #444;
+            background: rgba(30, 30, 30, 0.9); color: white; font-size: 18px; outline: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        input:focus {
-            border-color: #00E5FF;
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
-            background: #1E1E1E;
-        }
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        input:focus { border-color: #00E5FF; box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); }
     </style>
 </head>
 <body>
     <canvas id="bgCanvas"></canvas>
-    <div class="content">
-        <h1>G<span>oo</span>gle</h1>
-        <div class="search-container">
-            <form action="https://www.google.com/search" method="GET">
-                <input type="text" name="q" placeholder="Search Google or type URL..." autofocus autocomplete="off">
-            </form>
-        </div>
+    <div class="container">
+        <h1>B<span>-</span>Browser</h1>
+        <form action="https://www.google.com/search" method="GET">
+            <input type="text" name="q" placeholder="Search or type URL..." autocomplete="off" autofocus>
+        </form>
     </div>
     <script>
         const canvas = document.getElementById('bgCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         let particles = [];
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2;
-                this.speedX = Math.random() * 1 - 0.5;
-                this.speedY = Math.random() * 1 - 0.5;
-            }
-            update() {
-                this.x += this.speedX; this.y += this.speedY;
-                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
-                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
-            }
-            draw() {
-                ctx.fillStyle = '#00E5FF'; ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-            }
-        }
-        function init() { for (let i = 0; i < 100; i++) particles.push(new Particle()); }
+        for(let i=0; i<80; i++) particles.push({
+            x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+            vx: (Math.random()-0.5)*1, vy: (Math.random()-0.5)*1, size: Math.random()*2
+        });
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update(); particles[i].draw();
-                for (let j = i; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 100) {
-                        ctx.strokeStyle = `rgba(0, 229, 255, ${1 - distance/100})`;
-                        ctx.lineWidth = 0.5; ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = '#00E5FF';
+            particles.forEach(p => {
+                p.x+=p.vx; p.y+=p.vy;
+                if(p.x<0||p.x>canvas.width) p.vx*=-1;
+                if(p.y<0||p.y>canvas.height) p.vy*=-1;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            });
+            // Lines
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.1)';
+            for(let i=0; i<particles.length; i++) {
+                for(let j=i; j<particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    if(Math.sqrt(dx*dx+dy*dy) < 100) {
+                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
                     }
                 }
             }
             requestAnimationFrame(animate);
         }
-        init(); animate();
-        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+        animate();
     </script>
 </body>
 </html>

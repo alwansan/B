@@ -4,21 +4,21 @@
     android:layout_height="match_parent"
     android:background="@color/background_dark">
 
-    <!-- حاوية عناصر التحكم العلوية (تختفي بـ Ctrl+G) -->
+    <!-- شريط الأدوات العلوي -->
     <LinearLayout
         android:id="@+id/ui_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#121212"
-        android:elevation="4dp">
+        android:elevation="6dp">
 
-        <!-- شريط التبويبات -->
+        <!-- منطقة التبويبات -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="40dp"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:paddingTop="2dp">
             
             <HorizontalScrollView
                 android:layout_width="0dp"
@@ -26,33 +26,30 @@
                 android:layout_weight="1"
                 android:fillViewport="true"
                 android:scrollbars="none">
-                
                 <LinearLayout
                     android:id="@+id/tabs_container"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:paddingTop="4dp"/>
+                    android:orientation="horizontal"/>
             </HorizontalScrollView>
 
-            <!-- زر إضافة تبويب -->
             <Button
                 android:id="@+id/btn_add_tab"
-                android:layout_width="44dp"
+                android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:text="+"
-                android:textSize="20sp"
-                android:background="?attr/selectableItemBackground"
-                android:textColor="@color/neon_blue" />
+                android:textSize="22sp"
+                android:textColor="@color/neon_blue"
+                android:background="?attr/selectableItemBackground" />
         </LinearLayout>
 
         <!-- شريط العنوان -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:padding="8dp"
-            android:background="#1E1E1E"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:padding="6dp"
+            android:background="#1E1E1E">
             
             <EditText
                 android:id="@+id/url_input"
@@ -60,17 +57,18 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/bg_url_bar"
-                android:hint="Search Google or enter URL..."
-                android:paddingStart="12dp"
+                android:hint="Search or enter address"
+                android:paddingStart="16dp"
                 android:textColor="#FFF"
                 android:textColorHint="#888"
                 android:textSize="14sp"
                 android:singleLine="true"
-                android:imeOptions="actionSearch"/>
-
+                android:inputType="textUri"
+                android:imeOptions="actionGo"/>
+            
             <Button
                 android:id="@+id/btn_go"
-                android:layout_width="60dp"
+                android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:text="GO"
                 android:textColor="@color/neon_blue"
@@ -79,7 +77,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- منطقة عرض المتصفح -->
     <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"
