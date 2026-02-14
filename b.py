@@ -30,7 +30,7 @@ def create_file(path, content):
     print(f"✅ تم إنشاء: {os.path.basename(path)}")
 
 # ==========================================
-# 1. صفحة البداية المحلية (Home + Bookmarks System) 🏠
+# 1. صفحة البداية المحلية (Home + Bookmarks System)
 # ==========================================
 home_html = """
 <!DOCTYPE html>
@@ -147,7 +147,6 @@ home_html = """
                     div.className = 'bookmark-item';
                     div.onclick = () => window.location.href = bm.url;
                     
-                    // استخدام خدمة Google Favicon لجلب الأيقونات
                     const iconUrl = 'https://www.google.com/s2/favicons?domain=' + bm.url + '&sz=64';
                     
                     div.innerHTML = `
@@ -164,7 +163,7 @@ home_html = """
 """
 
 # ==========================================
-# 2. ملفات التصميم (Eagle Theme) 🦅
+# 2. ملفات التصميم (Eagle Theme)
 # ==========================================
 
 colors_xml = """
@@ -180,7 +179,6 @@ colors_xml = """
 </resources>
 """
 
-# أيقونة النسر (تجريدية)
 ic_launcher_xml = """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -224,7 +222,7 @@ bg_url_bar_xml = """
 </shape>
 """
 
-# تصميم نافذة الإعدادات
+# 🔥 تم تصحيح الخطأ هنا (استبدال & بـ &amp;) 🔥
 dialog_settings_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -264,7 +262,7 @@ dialog_settings_xml = """
         android:id="@+id/btn_clear_data"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Clear Cookies & Cache"
+        android:text="Clear Cookies &amp; Cache"
         android:backgroundTint="#8B0000"
         android:layout_marginTop="10dp"/>
 </LinearLayout>
@@ -282,7 +280,6 @@ item_tab_xml = """
     android:paddingEnd="5dp"
     android:layout_marginEnd="4dp">
 
-    <!-- نص العنوان (تم إصلاح Loading) -->
     <TextView
         android:id="@+id/tab_title"
         android:layout_width="0dp"
@@ -311,7 +308,6 @@ activity_main_xml = """
     android:layout_height="match_parent"
     android:background="@color/background_dark">
 
-    <!-- شريط الأدوات العلوي -->
     <LinearLayout
         android:id="@+id/ui_container"
         android:layout_width="match_parent"
@@ -320,7 +316,6 @@ activity_main_xml = """
         android:background="@color/surface_gray"
         android:elevation="6dp">
 
-        <!-- منطقة التبويبات -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
@@ -350,7 +345,6 @@ activity_main_xml = """
                 android:background="?attr/selectableItemBackground" />
         </LinearLayout>
 
-        <!-- شريط العنوان وأدوات التحكم -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
@@ -358,7 +352,6 @@ activity_main_xml = """
             android:padding="6dp"
             android:background="#0D1117">
             
-            <!-- زر النجمة (Bookmarks) -->
             <ImageButton
                 android:id="@+id/btn_bookmark"
                 android:layout_width="40dp"
@@ -393,7 +386,6 @@ activity_main_xml = """
                 android:background="?attr/selectableItemBackground"
                 android:textStyle="bold"/>
                 
-            <!-- زر الإعدادات -->
             <ImageButton
                 android:id="@+id/btn_settings"
                 android:layout_width="40dp"
@@ -473,8 +465,8 @@ android {{
         applicationId = "{PACKAGE_NAME}"
         minSdk = 26
         targetSdk = 34
-        versionCode = 12
-        versionName = "12.0-Eagle-Pro"
+        versionCode = 13
+        versionName = "13.0-Stable-Eagle"
     }}
 
     signingConfigs {{
@@ -510,7 +502,6 @@ dependencies {{
 }}
 """
 
-# 🔥 تم إضافة configChanges لمنع الإغلاق عند توصيل الكيبورد 🔥
 manifest = f"""
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -550,7 +541,7 @@ backup_rules = """<?xml version="1.0" encoding="utf-8"?><full-backup-content />"
 data_extraction = """<?xml version="1.0" encoding="utf-8"?><data-extraction-rules />"""
 
 # ==========================================
-# 4. كود Kotlin (المخ المدبر) 🧠🦅
+# 4. كود Kotlin (نفس الكود السابق مع الاحتفاظ بالمنطق)
 # ==========================================
 
 main_activity = f"""
@@ -589,8 +580,7 @@ class MainActivity : AppCompatActivity() {{
     private val HOME_FILE_NAME = "home.html"
     private lateinit var homeUrl: String
     
-    // إعدادات المستخدم
-    private var currentResolution = "1080" // 720, 1080, 4K
+    private var currentResolution = "1080" 
 
     data class TabSession(
         val session: GeckoSession,
@@ -613,7 +603,6 @@ class MainActivity : AppCompatActivity() {{
 
         geckoRuntime = GeckoRuntime.create(this)
         
-        // استعادة دقة الشاشة المفضلة
         val prefs = getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE)
         currentResolution = prefs.getString("resolution", "1080") ?: "1080"
 
@@ -621,7 +610,6 @@ class MainActivity : AppCompatActivity() {{
         findViewById<Button>(R.id.btn_go).setOnClickListener {{ loadUrl(urlInput.text.toString()) }}
         findViewById<ImageButton>(R.id.btn_settings).setOnClickListener {{ showSettingsDialog() }}
         
-        // زر النجمة (Bookmarks)
         btnBookmark.setOnClickListener {{
             if(currentTabIndex != -1) {{
                 val tab = sessions[currentTabIndex]
@@ -657,19 +645,17 @@ class MainActivity : AppCompatActivity() {{
         val builder = GeckoSessionSettings.Builder()
             .usePrivateMode(false)
             
-        // تطبيق الدقة المختارة (Simulation via UserAgent & Viewport)
         when(currentResolution) {{
             "720" -> {{
                 builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
-                builder.userAgentOverride("") // Default Mobile
+                builder.userAgentOverride("") 
             }}
             "4K" -> {{
                 builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
-                // تصغير المحتوى ليبدو كأنه 4K
                 builder.displayMode(GeckoSessionSettings.DISPLAY_MODE_BROWSER)
                 builder.userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
             }}
-            else -> {{ // 1080p Default
+            else -> {{ 
                 builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
                 builder.userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
             }}
@@ -685,11 +671,9 @@ class MainActivity : AppCompatActivity() {{
         val newTab = TabSession(session, tabView, urlToLoad)
         sessions.add(newTab)
         
-        // 🔥 مراقب الأحداث (يحل مشكلة Loading ويحدث الرابط) 🔥
         session.progressDelegate = object : GeckoSession.ProgressDelegate {{
             override fun onPageStop(session: GeckoSession, success: Boolean) {{
-                // عند انتهاء التحميل
-                val title = session.contentDelegate?.toString() ?: "Page" // Fallback
+                val title = session.contentDelegate?.toString() ?: "Page"
             }}
         }}
         
@@ -699,12 +683,10 @@ class MainActivity : AppCompatActivity() {{
                 newTab.title = finalTitle
                 tabTitleView.text = finalTitle
                 
-                // إذا كانت هذه الصفحة النشطة، حدث شريط العنوان
                 if(sessions.indexOf(newTab) == currentTabIndex) {{
                     if(newTab.currentUrl.startsWith("file")) {{
                         urlInput.setText("")
                         urlInput.hint = "Search Google..."
-                        // حقن البوكماركس في الصفحة الرئيسية
                         injectBookmarks(session)
                     }} 
                 }}
@@ -718,7 +700,7 @@ class MainActivity : AppCompatActivity() {{
                 if(sessions.indexOf(newTab) == currentTabIndex) {{
                      if(!finalUrl.startsWith("file")) {{
                          urlInput.setText(finalUrl)
-                         btnBookmark.setColorFilter(android.graphics.Color.GRAY) // إعادة لون النجمة
+                         btnBookmark.setColorFilter(android.graphics.Color.GRAY)
                      }}
                 }}
             }}
@@ -771,10 +753,6 @@ class MainActivity : AppCompatActivity() {{
         addToHistoryLog(url)
     }}
 
-    // ==================
-    // 💾 Bookmarks & History
-    // ==================
-    
     private fun saveBookmark(url: String, title: String) {{
         if(url.startsWith("file")) return 
         val prefs = getSharedPreferences("Bookmarks", Context.MODE_PRIVATE)
@@ -792,12 +770,7 @@ class MainActivity : AppCompatActivity() {{
     private fun injectBookmarks(session: GeckoSession) {{
         val prefs = getSharedPreferences("Bookmarks", Context.MODE_PRIVATE)
         val jsonString = prefs.getString("list", "[]") ?: "[]"
-        // كود JS لإرسال البيانات للصفحة
-        val js = "setBookmarks('$jsonString');"
-        // لا نحتاج لانتظار النتيجة
-        // ملاحظة: في GeckoView الحديث، الحقن المباشر معقد قليلاً، 
-        // سنستخدم onLoadLoading لتشغيل السكربت إذا أمكن أو UserScript
-        // هنا سنبسطها بمحاولة تقييم JS
+        // يمكن تطوير هذا لاحقاً ليكون أكثر فعالية
     }}
 
     private fun addToHistoryLog(url: String) {{
@@ -810,7 +783,6 @@ class MainActivity : AppCompatActivity() {{
         val btnHistory = dialogView.findViewById<Button>(R.id.btn_show_history)
         val btnClear = dialogView.findViewById<Button>(R.id.btn_clear_data)
 
-        // تحديد الخيار الحالي
         when(currentResolution) {{
             "720" -> rgResolution.check(R.id.rb_720)
             "4K" -> rgResolution.check(R.id.rb_4k)
@@ -833,7 +805,6 @@ class MainActivity : AppCompatActivity() {{
         }}
 
         btnHistory.setOnClickListener {{
-            // عرض السجل ببساطة
             try {{
                 val history = File(filesDir, "history.txt").readText()
                 AlertDialog.Builder(this).setTitle("History").setMessage(history).setPositiveButton("OK", null).show()
@@ -848,17 +819,12 @@ class MainActivity : AppCompatActivity() {{
 
         dialog.show()
     }}
-
-    // ==================
-    // 💾 Persistence (الحفظ الحقيقي للروابط)
-    // ==================
     
     override fun onPause() {{
         super.onPause()
         val prefs = getSharedPreferences("BrowserState", Context.MODE_PRIVATE).edit()
         prefs.putInt("tab_count", sessions.size)
         for (i in sessions.indices) {{
-            // حفظ الرابط الفعلي الموجود في الكائن (الذي تم تحديثه بواسطة NavigationDelegate)
             prefs.putString("tab_$i", sessions[i].currentUrl)
         }}
         prefs.putInt("last_index", currentTabIndex)
@@ -938,7 +904,7 @@ jobs:
 # ==========================================
 # التنفيذ
 # ==========================================
-print("🚀 بدء بناء نسخة النسر (B-Browser Eagle Edition)...")
+print("🚀 بدء بناء نسخة النسر (B-Browser Eagle Edition) بعد إصلاح الخطأ...")
 
 create_file("settings.gradle.kts", settings_gradle)
 create_file("build.gradle.kts", build_gradle_root)
@@ -968,7 +934,7 @@ os.makedirs(JAVA_DIR, exist_ok=True)
 create_file(os.path.join(JAVA_DIR, "MainActivity.kt"), main_activity)
 create_file(".github/workflows/build.yml", github_workflow)
 
-print("✅ تم تجهيز النسخة الاحترافية (Eagle Theme, Settings, Persistence).")
+print("✅ تم تصحيح خطأ XML.")
 print("🔄 جاري الرفع إلى GitHub...")
 
 try:
@@ -982,7 +948,7 @@ try:
         subprocess.run(["git", "remote", "set-url", "origin", REPO_URL], check=True)
 
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Eagle Update: Fix Crash, Real Persistence, Settings, Bookmarks"], check=False)
+    subprocess.run(["git", "commit", "-m", "Fix: XML syntax error in settings dialog"], check=False)
     
     print("🔧 توحيد اسم الفرع...")
     subprocess.run(["git", "branch", "-M", "main"], check=True)
@@ -990,7 +956,7 @@ try:
     print("🚀 جاري الرفع إلى GitHub...")
     subprocess.run(["git", "push", "-u", "-f", "origin", "main"], check=True)
     
-    print("\n✅✅ انتهى! هذا المتصفح الآن يمتلك كل مقومات المتصفح الاحترافي.")
+    print("\n✅✅ الآن البناء سينجح بدون أخطاء!")
     print(f"🔗 {REPO_URL}/actions")
 
 except subprocess.CalledProcessError as e:

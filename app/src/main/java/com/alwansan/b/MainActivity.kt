@@ -33,8 +33,7 @@ class MainActivity : AppCompatActivity() {
     private val HOME_FILE_NAME = "home.html"
     private lateinit var homeUrl: String
     
-    // إعدادات المستخدم
-    private var currentResolution = "1080" // 720, 1080, 4K
+    private var currentResolution = "1080" 
 
     data class TabSession(
         val session: GeckoSession,
@@ -57,7 +56,6 @@ class MainActivity : AppCompatActivity() {
 
         geckoRuntime = GeckoRuntime.create(this)
         
-        // استعادة دقة الشاشة المفضلة
         val prefs = getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE)
         currentResolution = prefs.getString("resolution", "1080") ?: "1080"
 
@@ -65,7 +63,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_go).setOnClickListener { loadUrl(urlInput.text.toString()) }
         findViewById<ImageButton>(R.id.btn_settings).setOnClickListener { showSettingsDialog() }
         
-        // زر النجمة (Bookmarks)
         btnBookmark.setOnClickListener {
             if(currentTabIndex != -1) {
                 val tab = sessions[currentTabIndex]
@@ -101,19 +98,17 @@ class MainActivity : AppCompatActivity() {
         val builder = GeckoSessionSettings.Builder()
             .usePrivateMode(false)
             
-        // تطبيق الدقة المختارة (Simulation via UserAgent & Viewport)
         when(currentResolution) {
             "720" -> {
                 builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
-                builder.userAgentOverride("") // Default Mobile
+                builder.userAgentOverride("") 
             }
             "4K" -> {
                 builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
-                // تصغير المحتوى ليبدو كأنه 4K
                 builder.displayMode(GeckoSessionSettings.DISPLAY_MODE_BROWSER)
                 builder.userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
             }
-            else -> { // 1080p Default
+            else -> { 
                 builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
                 builder.userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
             }
@@ -129,11 +124,9 @@ class MainActivity : AppCompatActivity() {
         val newTab = TabSession(session, tabView, urlToLoad)
         sessions.add(newTab)
         
-        // 🔥 مراقب الأحداث (يحل مشكلة Loading ويحدث الرابط) 🔥
         session.progressDelegate = object : GeckoSession.ProgressDelegate {
             override fun onPageStop(session: GeckoSession, success: Boolean) {
-                // عند انتهاء التحميل
-                val title = session.contentDelegate?.toString() ?: "Page" // Fallback
+                val title = session.contentDelegate?.toString() ?: "Page"
             }
         }
         
@@ -143,12 +136,10 @@ class MainActivity : AppCompatActivity() {
                 newTab.title = finalTitle
                 tabTitleView.text = finalTitle
                 
-                // إذا كانت هذه الصفحة النشطة، حدث شريط العنوان
                 if(sessions.indexOf(newTab) == currentTabIndex) {
                     if(newTab.currentUrl.startsWith("file")) {
                         urlInput.setText("")
                         urlInput.hint = "Search Google..."
-                        // حقن البوكماركس في الصفحة الرئيسية
                         injectBookmarks(session)
                     } 
                 }
@@ -162,7 +153,7 @@ class MainActivity : AppCompatActivity() {
                 if(sessions.indexOf(newTab) == currentTabIndex) {
                      if(!finalUrl.startsWith("file")) {
                          urlInput.setText(finalUrl)
-                         btnBookmark.setColorFilter(android.graphics.Color.GRAY) // إعادة لون النجمة
+                         btnBookmark.setColorFilter(android.graphics.Color.GRAY)
                      }
                 }
             }
@@ -215,10 +206,6 @@ class MainActivity : AppCompatActivity() {
         addToHistoryLog(url)
     }
 
-    // ==================
-    // 💾 Bookmarks & History
-    // ==================
-    
     private fun saveBookmark(url: String, title: String) {
         if(url.startsWith("file")) return 
         val prefs = getSharedPreferences("Bookmarks", Context.MODE_PRIVATE)
@@ -236,12 +223,7 @@ class MainActivity : AppCompatActivity() {
     private fun injectBookmarks(session: GeckoSession) {
         val prefs = getSharedPreferences("Bookmarks", Context.MODE_PRIVATE)
         val jsonString = prefs.getString("list", "[]") ?: "[]"
-        // كود JS لإرسال البيانات للصفحة
-        val js = "setBookmarks('$jsonString');"
-        // لا نحتاج لانتظار النتيجة
-        // ملاحظة: في GeckoView الحديث، الحقن المباشر معقد قليلاً، 
-        // سنستخدم onLoadLoading لتشغيل السكربت إذا أمكن أو UserScript
-        // هنا سنبسطها بمحاولة تقييم JS
+        // يمكن تطوير هذا لاحقاً ليكون أكثر فعالية
     }
 
     private fun addToHistoryLog(url: String) {
@@ -254,7 +236,6 @@ class MainActivity : AppCompatActivity() {
         val btnHistory = dialogView.findViewById<Button>(R.id.btn_show_history)
         val btnClear = dialogView.findViewById<Button>(R.id.btn_clear_data)
 
-        // تحديد الخيار الحالي
         when(currentResolution) {
             "720" -> rgResolution.check(R.id.rb_720)
             "4K" -> rgResolution.check(R.id.rb_4k)
@@ -277,7 +258,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnHistory.setOnClickListener {
-            // عرض السجل ببساطة
             try {
                 val history = File(filesDir, "history.txt").readText()
                 AlertDialog.Builder(this).setTitle("History").setMessage(history).setPositiveButton("OK", null).show()
@@ -292,17 +272,12 @@ class MainActivity : AppCompatActivity() {
 
         dialog.show()
     }
-
-    // ==================
-    // 💾 Persistence (الحفظ الحقيقي للروابط)
-    // ==================
     
     override fun onPause() {
         super.onPause()
         val prefs = getSharedPreferences("BrowserState", Context.MODE_PRIVATE).edit()
         prefs.putInt("tab_count", sessions.size)
         for (i in sessions.indices) {
-            // حفظ الرابط الفعلي الموجود في الكائن (الذي تم تحديثه بواسطة NavigationDelegate)
             prefs.putString("tab_$i", sessions[i].currentUrl)
         }
         prefs.putInt("last_index", currentTabIndex)

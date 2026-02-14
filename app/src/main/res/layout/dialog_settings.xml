@@ -36,7 +36,7 @@
         android:id="@+id/btn_clear_data"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Clear Cookies & Cache"
+        android:text="Clear Cookies &amp; Cache"
         android:backgroundTint="#8B0000"
         android:layout_marginTop="10dp"/>
 </LinearLayout>
