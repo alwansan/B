@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#121212"
+        android:background="@color/surface_gray"
         android:elevation="6dp">
 
         <!-- منطقة التبويبات -->
@@ -39,28 +39,39 @@
                 android:layout_height="40dp"
                 android:text="+"
                 android:textSize="22sp"
-                android:textColor="@color/neon_blue"
+                android:textColor="@color/eagle_blue"
                 android:background="?attr/selectableItemBackground" />
         </LinearLayout>
 
-        <!-- شريط العنوان -->
+        <!-- شريط العنوان وأدوات التحكم -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:gravity="center_vertical"
             android:padding="6dp"
-            android:background="#1E1E1E">
+            android:background="#0D1117">
             
+            <!-- زر النجمة (Bookmarks) -->
+            <ImageButton
+                android:id="@+id/btn_bookmark"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:src="@android:drawable/star_off"
+                android:tint="#AAA"
+                android:background="?attr/selectableItemBackground"/>
+
             <EditText
                 android:id="@+id/url_input"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:background="@drawable/bg_url_bar"
                 android:hint="Search or enter address"
                 android:paddingStart="16dp"
                 android:textColor="#FFF"
-                android:textColorHint="#888"
+                android:textColorHint="#555"
                 android:textSize="14sp"
                 android:singleLine="true"
                 android:inputType="textUri"
@@ -71,9 +82,18 @@
                 android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:text="GO"
-                android:textColor="@color/neon_blue"
+                android:textColor="@color/eagle_blue"
                 android:background="?attr/selectableItemBackground"
                 android:textStyle="bold"/>
+                
+            <!-- زر الإعدادات -->
+            <ImageButton
+                android:id="@+id/btn_settings"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:tint="#FFF"
+                android:background="?attr/selectableItemBackground"/>
         </LinearLayout>
     </LinearLayout>
 

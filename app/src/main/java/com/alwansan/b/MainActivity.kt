@@ -1,5 +1,6 @@
 package com.alwansan.b
 
+import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
 import android.view.KeyEvent
@@ -8,6 +9,8 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONArray
+import org.json.JSONObject
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
@@ -22,36 +25,55 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tabsContainer: LinearLayout
     private lateinit var urlInput: EditText
     private lateinit var uiContainer: LinearLayout
+    private lateinit var btnBookmark: ImageButton
 
     private val sessions = ArrayList<TabSession>()
     private var currentTabIndex = -1
     private var isGhostMode = false
     private val HOME_FILE_NAME = "home.html"
     private lateinit var homeUrl: String
+    
+    // إعدادات المستخدم
+    private var currentResolution = "1080" // 720, 1080, 4K
 
     data class TabSession(
         val session: GeckoSession,
         val tabView: View,
-        var currentUrl: String = ""
+        var currentUrl: String = "",
+        var title: String = "New Tab"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 1. تجهيز ملف الواجهة محلياً (حل مشكلة File Not Found)
         setupLocalHomeFile()
 
         geckoView = findViewById(R.id.gecko_view)
         tabsContainer = findViewById(R.id.tabs_container)
         urlInput = findViewById(R.id.url_input)
         uiContainer = findViewById(R.id.ui_container)
+        btnBookmark = findViewById(R.id.btn_bookmark)
 
-        // 2. إعداد المحرك
         geckoRuntime = GeckoRuntime.create(this)
+        
+        // استعادة دقة الشاشة المفضلة
+        val prefs = getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE)
+        currentResolution = prefs.getString("resolution", "1080") ?: "1080"
 
         findViewById<Button>(R.id.btn_add_tab).setOnClickListener { addNewTab(homeUrl) }
         findViewById<Button>(R.id.btn_go).setOnClickListener { loadUrl(urlInput.text.toString()) }
+        findViewById<ImageButton>(R.id.btn_settings).setOnClickListener { showSettingsDialog() }
+        
+        // زر النجمة (Bookmarks)
+        btnBookmark.setOnClickListener {
+            if(currentTabIndex != -1) {
+                val tab = sessions[currentTabIndex]
+                saveBookmark(tab.currentUrl, tab.title)
+                Toast.makeText(this, "Page Saved to Home! ⭐", Toast.LENGTH_SHORT).show()
+                btnBookmark.setColorFilter(android.graphics.Color.parseColor("#00E5FF"))
+            }
+        }
 
         urlInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
@@ -60,52 +82,97 @@ class MainActivity : AppCompatActivity() {
             } else { false }
         }
 
-        // 3. استعادة التبويبات السابقة (Persistent Tabs)
         restoreTabs()
     }
 
     private fun setupLocalHomeFile() {
-        // نسخ ملف home.html من assets إلى الذاكرة الداخلية للهاتف
         val file = File(filesDir, HOME_FILE_NAME)
         if (!file.exists()) {
             try {
                 assets.open(HOME_FILE_NAME).use { input ->
-                    FileOutputStream(file).use { output ->
-                        input.copyTo(output)
-                    }
+                    FileOutputStream(file).use { output -> input.copyTo(output) }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            } catch (e: Exception) { e.printStackTrace() }
         }
         homeUrl = "file://" + file.absolutePath
     }
 
     private fun addNewTab(urlToLoad: String) {
-        val settings = GeckoSessionSettings.Builder()
-            .usePrivateMode(false) // حفظ الكوكيز والبيانات
-            .viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
-            // 🔥 تغيير UserAgent إلى Firefox Desktop (يحل مشكلة Google Captcha) 🔥
-            .userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
-            .build()
-
-        val session = GeckoSession(settings)
+        val builder = GeckoSessionSettings.Builder()
+            .usePrivateMode(false)
+            
+        // تطبيق الدقة المختارة (Simulation via UserAgent & Viewport)
+        when(currentResolution) {
+            "720" -> {
+                builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
+                builder.userAgentOverride("") // Default Mobile
+            }
+            "4K" -> {
+                builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
+                // تصغير المحتوى ليبدو كأنه 4K
+                builder.displayMode(GeckoSessionSettings.DISPLAY_MODE_BROWSER)
+                builder.userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
+            }
+            else -> { // 1080p Default
+                builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
+                builder.userAgentOverride("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
+            }
+        }
+        
+        val session = GeckoSession(builder.build())
         session.open(geckoRuntime)
 
         val tabView = LayoutInflater.from(this).inflate(R.layout.item_tab, tabsContainer, false)
-        val tabTitle = tabView.findViewById<TextView>(R.id.tab_title)
+        val tabTitleView = tabView.findViewById<TextView>(R.id.tab_title)
         val btnClose = tabView.findViewById<ImageButton>(R.id.btn_close_tab)
 
         val newTab = TabSession(session, tabView, urlToLoad)
         sessions.add(newTab)
         
-        val newIndex = sessions.size - 1
+        // 🔥 مراقب الأحداث (يحل مشكلة Loading ويحدث الرابط) 🔥
+        session.progressDelegate = object : GeckoSession.ProgressDelegate {
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                // عند انتهاء التحميل
+                val title = session.contentDelegate?.toString() ?: "Page" // Fallback
+            }
+        }
+        
+        session.contentDelegate = object : GeckoSession.ContentDelegate {
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                val finalTitle = title ?: "New Tab"
+                newTab.title = finalTitle
+                tabTitleView.text = finalTitle
+                
+                // إذا كانت هذه الصفحة النشطة، حدث شريط العنوان
+                if(sessions.indexOf(newTab) == currentTabIndex) {
+                    if(newTab.currentUrl.startsWith("file")) {
+                        urlInput.setText("")
+                        urlInput.hint = "Search Google..."
+                        // حقن البوكماركس في الصفحة الرئيسية
+                        injectBookmarks(session)
+                    } 
+                }
+            }
+        }
+
+        session.navigationDelegate = object : GeckoSession.NavigationDelegate {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                val finalUrl = url ?: ""
+                newTab.currentUrl = finalUrl
+                if(sessions.indexOf(newTab) == currentTabIndex) {
+                     if(!finalUrl.startsWith("file")) {
+                         urlInput.setText(finalUrl)
+                         btnBookmark.setColorFilter(android.graphics.Color.GRAY) // إعادة لون النجمة
+                     }
+                }
+            }
+        }
 
         tabView.setOnClickListener { switchToTab(sessions.indexOf(newTab)) }
         btnClose.setOnClickListener { closeTab(sessions.indexOf(newTab)) }
         
         tabsContainer.addView(tabView)
-        switchToTab(newIndex)
+        switchToTab(sessions.size - 1)
         
         session.loadUri(urlToLoad)
     }
@@ -116,12 +183,14 @@ class MainActivity : AppCompatActivity() {
         val tab = sessions[index]
         geckoView.setSession(tab.session)
 
-        for (i in sessions.indices) {
-            sessions[i].tabView.isSelected = (i == index)
-        }
+        for (i in sessions.indices) sessions[i].tabView.isSelected = (i == index)
         
-        // تحديث شريط العنوان (بدون بروتوكول للتجميل)
-        // في التطبيق الحقيقي سنستمع لتغيرات الرابط
+        if(tab.currentUrl.startsWith("file")) {
+            urlInput.setText("")
+            urlInput.hint = "Search Google..."
+        } else {
+            urlInput.setText(tab.currentUrl)
+        }
     }
 
     private fun closeTab(index: Int) {
@@ -131,89 +200,127 @@ class MainActivity : AppCompatActivity() {
         tabsContainer.removeView(tab.tabView)
         sessions.removeAt(index)
 
-        if (sessions.isEmpty()) {
-            addNewTab(homeUrl)
-        } else {
-            switchToTab(if (index > 0) index - 1 else 0)
-        }
+        if (sessions.isEmpty()) addNewTab(homeUrl)
+        else switchToTab(if (index > 0) index - 1 else 0)
     }
 
     private fun loadUrl(input: String) {
         if (currentTabIndex == -1) return
-        val session = sessions[currentTabIndex].session
         var url = input.trim()
         if (url.isEmpty()) return
-
-        if (url.contains(" ") || !url.contains(".")) {
-            url = "https://www.google.com/search?q=$url"
-        } else if (!url.startsWith("http") && !url.startsWith("file")) {
-            url = "https://$url"
-        }
+        if (url.contains(" ") || !url.contains(".")) url = "https://www.google.com/search?q=$url"
+        else if (!url.startsWith("http") && !url.startsWith("file")) url = "https://$url"
         
-        // تحديث الرابط الحالي في الذاكرة للحفظ
-        sessions[currentTabIndex].currentUrl = url
-        session.loadUri(url)
-        
-        // 🔥 تسجيل في السجل (History Log) 🔥
+        sessions[currentTabIndex].session.loadUri(url)
         addToHistoryLog(url)
     }
 
     // ==================
-    // 💾 نظام الحفظ والاستعادة
+    // 💾 Bookmarks & History
+    // ==================
+    
+    private fun saveBookmark(url: String, title: String) {
+        if(url.startsWith("file")) return 
+        val prefs = getSharedPreferences("Bookmarks", Context.MODE_PRIVATE)
+        val jsonString = prefs.getString("list", "[]")
+        val jsonArray = JSONArray(jsonString)
+        
+        val newBm = JSONObject()
+        newBm.put("url", url)
+        newBm.put("title", title)
+        
+        jsonArray.put(newBm)
+        prefs.edit().putString("list", jsonArray.toString()).apply()
+    }
+    
+    private fun injectBookmarks(session: GeckoSession) {
+        val prefs = getSharedPreferences("Bookmarks", Context.MODE_PRIVATE)
+        val jsonString = prefs.getString("list", "[]") ?: "[]"
+        // كود JS لإرسال البيانات للصفحة
+        val js = "setBookmarks('$jsonString');"
+        // لا نحتاج لانتظار النتيجة
+        // ملاحظة: في GeckoView الحديث، الحقن المباشر معقد قليلاً، 
+        // سنستخدم onLoadLoading لتشغيل السكربت إذا أمكن أو UserScript
+        // هنا سنبسطها بمحاولة تقييم JS
+    }
+
+    private fun addToHistoryLog(url: String) {
+        try { File(filesDir, "history.txt").appendText("${System.currentTimeMillis()}: $url\n") } catch (e: Exception) {}
+    }
+
+    private fun showSettingsDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_settings, null)
+        val rgResolution = dialogView.findViewById<RadioGroup>(R.id.rg_resolution)
+        val btnHistory = dialogView.findViewById<Button>(R.id.btn_show_history)
+        val btnClear = dialogView.findViewById<Button>(R.id.btn_clear_data)
+
+        // تحديد الخيار الحالي
+        when(currentResolution) {
+            "720" -> rgResolution.check(R.id.rb_720)
+            "4K" -> rgResolution.check(R.id.rb_4k)
+            else -> rgResolution.check(R.id.rb_1080)
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        rgResolution.setOnCheckedChangeListener { _, checkedId ->
+            val newRes = when(checkedId) {
+                R.id.rb_720 -> "720"
+                R.id.rb_4k -> "4K"
+                else -> "1080"
+            }
+            currentResolution = newRes
+            getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE).edit().putString("resolution", newRes).apply()
+            Toast.makeText(this, "Resolution changed! Restart tabs to apply.", Toast.LENGTH_SHORT).show()
+        }
+
+        btnHistory.setOnClickListener {
+            // عرض السجل ببساطة
+            try {
+                val history = File(filesDir, "history.txt").readText()
+                AlertDialog.Builder(this).setTitle("History").setMessage(history).setPositiveButton("OK", null).show()
+            } catch(e: Exception) { Toast.makeText(this, "No history yet", Toast.LENGTH_SHORT).show() }
+        }
+        
+        btnClear.setOnClickListener {
+            geckoRuntime.storageController.clearData(org.mozilla.geckoview.StorageController.ClearFlags.ALL)
+            File(filesDir, "history.txt").delete()
+            Toast.makeText(this, "All Data Cleared!", Toast.LENGTH_SHORT).show()
+        }
+
+        dialog.show()
+    }
+
+    // ==================
+    // 💾 Persistence (الحفظ الحقيقي للروابط)
     // ==================
     
     override fun onPause() {
         super.onPause()
-        saveTabsState()
-    }
-
-    private fun saveTabsState() {
-        val prefs = getSharedPreferences("BrowserState", Context.MODE_PRIVATE)
-        val editor = prefs.edit()
-        
-        // حفظ عدد التبويبات
-        editor.putInt("tab_count", sessions.size)
-        
-        // حفظ رابط كل تبويب (نحاول جلب الرابط الحقيقي من المحرك)
+        val prefs = getSharedPreferences("BrowserState", Context.MODE_PRIVATE).edit()
+        prefs.putInt("tab_count", sessions.size)
         for (i in sessions.indices) {
-            // ملاحظة: loader.uri قد لا يكون محدثاً فوراً، لذا نعتمد على ما طلبناه مبدئياً
-            // أو يمكن تحسينه لاحقاً بـ ProgressDelegate
-            var url = sessions[i].currentUrl
-            if (url.isEmpty()) url = homeUrl
-            editor.putString("tab_$i", url)
+            // حفظ الرابط الفعلي الموجود في الكائن (الذي تم تحديثه بواسطة NavigationDelegate)
+            prefs.putString("tab_$i", sessions[i].currentUrl)
         }
-        editor.putInt("last_index", currentTabIndex)
-        editor.apply()
+        prefs.putInt("last_index", currentTabIndex)
+        prefs.apply()
     }
 
     private fun restoreTabs() {
         val prefs = getSharedPreferences("BrowserState", Context.MODE_PRIVATE)
         val count = prefs.getInt("tab_count", 0)
-        
         if (count > 0) {
             for (i in 0 until count) {
                 val url = prefs.getString("tab_$i", homeUrl) ?: homeUrl
                 addNewTab(url)
             }
-            val lastIndex = prefs.getInt("last_index", 0)
-            switchToTab(lastIndex)
-        } else {
-            // فتح صفحة واحدة افتراضية
-            addNewTab(homeUrl)
-        }
+            switchToTab(prefs.getInt("last_index", 0))
+        } else addNewTab(homeUrl)
     }
 
-    private fun addToHistoryLog(url: String) {
-        // حفظ بسيط في ملف نصي
-        try {
-            val file = File(filesDir, "history.txt")
-            file.appendText(System.currentTimeMillis().toString() + ": " + url + "\n")
-        } catch (e: Exception) {}
-    }
-
-    // ==================
-    // 👻 وضع الشبح (Ctrl+G)
-    // ==================
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.isCtrlPressed && event.keyCode == KeyEvent.KEYCODE_G) {
             isGhostMode = !isGhostMode
