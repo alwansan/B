@@ -242,12 +242,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadUrl(input: String) {
         if (currentTabIndex == -1) return
+        
         var url = input.trim()
         if (url.isEmpty()) return
-        if (url.contains(" ") || !url.contains(".")) url = "https://www.google.com/search?q=$url"
-        else if (!url.startsWith("http") && !url.startsWith("file")) url = "https://$url"
-        
-        sessions[currentTabIndex].session.loadUri(url)
+
+        val isHttp = url.startsWith("http://") || url.startsWith("https://")
+        val isLocalhost = url.startsWith("localhost") || url.contains("://localhost")
+        val isIP = Regex("^\d{1,3}(\.\d{1,3}){3}(:\d+)?$").matches(url)
+
+        if (isHttp) {
+            // use as is
+        } else if (isLocalhost) {
+            url = "http://$url"
+        } else if (isIP) {
+            url = "http://$url"
+        } else if (url.contains(".")) {
+            url = "https://$url"
+        } else {
+            url = "https://www.google.com/search?q=$url"
+        }
+    
         addToHistoryLog(url)
         geckoView.requestFocus()
     }
