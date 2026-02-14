@@ -124,9 +124,22 @@ class MainActivity : AppCompatActivity() {
         val newTab = TabSession(session, tabView, urlToLoad)
         sessions.add(newTab)
         
+        // 🔥 تم الإصلاح هنا: استخدام ProgressDelegate بدلاً من NavigationDelegate المكسور 🔥
         session.progressDelegate = object : GeckoSession.ProgressDelegate {
+            
+            // هذه الدالة تعمل عند بدء تحميل الصفحة (بديل onLocationChange)
+            override fun onPageStart(session: GeckoSession, url: String) {
+                newTab.currentUrl = url
+                if(sessions.indexOf(newTab) == currentTabIndex) {
+                     if(!url.startsWith("file")) {
+                         urlInput.setText(url)
+                         btnBookmark.setColorFilter(android.graphics.Color.GRAY)
+                     }
+                }
+            }
+
             override fun onPageStop(session: GeckoSession, success: Boolean) {
-                val title = session.contentDelegate?.toString() ?: "Page"
+                // عند انتهاء التحميل
             }
         }
         
@@ -146,18 +159,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        session.navigationDelegate = object : GeckoSession.NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?) {
-                val finalUrl = url ?: ""
-                newTab.currentUrl = finalUrl
-                if(sessions.indexOf(newTab) == currentTabIndex) {
-                     if(!finalUrl.startsWith("file")) {
-                         urlInput.setText(finalUrl)
-                         btnBookmark.setColorFilter(android.graphics.Color.GRAY)
-                     }
-                }
-            }
-        }
+        // تم حذف NavigationDelegate الذي كان يسبب الخطأ
 
         tabView.setOnClickListener { switchToTab(sessions.indexOf(newTab)) }
         btnClose.setOnClickListener { closeTab(sessions.indexOf(newTab)) }
@@ -223,7 +225,9 @@ class MainActivity : AppCompatActivity() {
     private fun injectBookmarks(session: GeckoSession) {
         val prefs = getSharedPreferences("Bookmarks", Context.MODE_PRIVATE)
         val jsonString = prefs.getString("list", "[]") ?: "[]"
-        // يمكن تطوير هذا لاحقاً ليكون أكثر فعالية
+        // كود JS لإرسال البيانات للصفحة
+        // val js = "setBookmarks('$jsonString');"
+        // session.loader.evaluateJavaScript(js, null) (يتطلب GeckoResult)
     }
 
     private fun addToHistoryLog(url: String) {
