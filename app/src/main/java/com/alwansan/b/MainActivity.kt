@@ -243,26 +243,28 @@ class MainActivity : AppCompatActivity() {
     private fun loadUrl(input: String) {
         if (currentTabIndex == -1) return
         
+        
         var url = input.trim()
         if (url.isEmpty()) return
 
         val isHttp = url.startsWith("http://") || url.startsWith("https://")
-        val isLocalhost = url.startsWith("localhost") || url.contains("://localhost")
-        val isIP = Regex("^\d{1,3}(\.\d{1,3}){3}(:\d+)?$").matches(url)
+        val isLocalhost = url.startsWith("localhost")
+        val isIPv4 = url.split(".").size == 4 && url.replace(".", "").replace(":", "").all { it.isDigit() }
 
         if (isHttp) {
             // use as is
         } else if (isLocalhost) {
             url = "http://$url"
-        } else if (isIP) {
+        } else if (isIPv4) {
             url = "http://$url"
         } else if (url.contains(".")) {
             url = "https://$url"
         } else {
             url = "https://www.google.com/search?q=$url"
         }
-    
+
         addToHistoryLog(url)
+    
         geckoView.requestFocus()
     }
 

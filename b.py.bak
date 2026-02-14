@@ -1,52 +1,59 @@
 import os
 import subprocess
+import re
 
-BASE_DIR = os.getcwd()
 KOTLIN_FILE = "app/src/main/java/com/alwansan/b/MainActivity.kt"
 
-def patch_file():
+def patch():
     if not os.path.exists(KOTLIN_FILE):
         print("❌ MainActivity.kt not found")
         return
-    
+
     with open(KOTLIN_FILE, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # حذف السطر المسبب للخطأ
-    content = content.replace(
-        "settings.setBoolean(GeckoSessionSettings.USE_DOUBLE_TAP_ZOOM, false)",
-        "// Removed invalid USE_DOUBLE_TAP_ZOOM (not supported in Gecko 121+)"
-    )
+    # الكود الجديد الذكي
+    new_logic = """
+        var url = input.trim()
+        if (url.isEmpty()) return
 
-    # إضافة تعطيل التكبير من View إذا لم يكن موجود
-    if "setOnTouchListener" not in content:
-        inject_code = """
-        // 🔒 Disable double tap & pinch zoom at View level
-        geckoView.setOnTouchListener { _, event ->
-            if (event.pointerCount > 1) {
-                true
-            } else {
-                false
-            }
+        val isHttp = url.startsWith("http://") || url.startsWith("https://")
+        val isLocalhost = url.startsWith("localhost") || url.contains("://localhost")
+        val isIP = Regex("^\\\\d{1,3}(\\\\.\\\\d{1,3}){3}(:\\\\d+)?$").matches(url)
+
+        if (isHttp) {
+            // use as is
+        } else if (isLocalhost) {
+            url = "http://$url"
+        } else if (isIP) {
+            url = "http://$url"
+        } else if (url.contains(".")) {
+            url = "https://$url"
+        } else {
+            url = "https://www.google.com/search?q=$url"
         }
-        """
-        content = content.replace(
-            "geckoRuntime = GeckoRuntime.create(this)",
-            "geckoRuntime = GeckoRuntime.create(this)\n" + inject_code
-        )
+    """
+
+    # استبدال الدالة القديمة فقط
+    content = re.sub(
+        r'var url = input\.trim\(\).*?addToHistoryLog\(url\)',
+        new_logic + "\n        addToHistoryLog(url)",
+        content,
+        flags=re.DOTALL
+    )
 
     with open(KOTLIN_FILE, "w", encoding="utf-8") as f:
         f.write(content)
 
-    print("✅ Zoom build error fixed.")
+    print("✅ Localhost/IP fix applied.")
 
-patch_file()
+patch()
 
 print("🚀 Pushing fix...")
 try:
     subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Fix: Remove unsupported USE_DOUBLE_TAP_ZOOM API"], check=False)
+    subprocess.run(["git", "commit", "-m", "Fix: Proper localhost & IP handling in URL bar"], check=False)
     subprocess.run(["git", "push", "-f", "origin", "main"], check=True)
-    print("✅ Build Fix Pushed.")
+    print("✅ Fix pushed successfully.")
 except subprocess.CalledProcessError as e:
-    print("❌ Git Error:", e)
+    print("❌ Git error:", e)
