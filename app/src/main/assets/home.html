@@ -1,1 +1,79 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>New Tab</title><style>body{margin:0;overflow:hidden;background-color:#191A24;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white}h1{font-size:90px;margin-bottom:20px;color:#fff;letter-spacing:-3px;font-weight:bold}h1 span{color:#00E5FF}input{width:600px;padding:20px 30px;border-radius:50px;border:none;background:#242633;color:white;font-size:20px;outline:none;box-shadow:0 10px 40px rgba(0,0,0,0.4);transition:0.3s}input:focus{box-shadow:0 0 0 2px #00E5FF;transform:scale(1.02)}</style></head><body><h1>B<span>-</span>Eagle</h1><form action="https://www.google.com/search" method="GET"><input type="text" name="q" placeholder="Search web..." autofocus autocomplete="off"></form></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B-Eagle</title>
+<style>
+:root{ --bg:#12131c; --card:#1b1d2a; --cyan:#00e5ff; --gray:#9aa0a6; }
+*{box-sizing:border-box}
+body{
+  margin:0; overflow:hidden;
+  background:radial-gradient(circle at top,#1f2233,#0b0c12);
+  font-family:'Segoe UI',sans-serif; height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;
+}
+canvas{ position:fixed; inset:0; z-index:-1; }
+h1{ font-size:90px; letter-spacing:-3px; margin-bottom:25px; animation:float 6s ease-in-out infinite; }
+h1 span{color:var(--cyan)}
+@keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+form{ width:100%; display:flex; justify-content:center; }
+input{
+  width:600px; padding:22px 32px; border-radius:60px; border:none;
+  background:var(--card); color:white; font-size:20px; outline:none;
+  box-shadow:0 20px 60px rgba(0,0,0,.45); transition:.35s cubic-bezier(.4,0,.2,1);
+}
+input::placeholder{color:var(--gray)}
+input:focus{ transform:scale(1.04); box-shadow:0 0 0 2px var(--cyan),0 30px 80px rgba(0,229,255,.25); }
+.ripple{
+  position:absolute; border-radius:50%; background:rgba(0,229,255,.25);
+  pointer-events:none; animation:ripple .7s ease-out forwards;
+}
+@keyframes ripple{ from{transform:scale(0);opacity:1} to{transform:scale(6);opacity:0} }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<h1>B<span>-</span>Eagle</h1>
+<form action="https://www.google.com/search" method="GET">
+  <input type="text" name="q" placeholder="Search web..." autofocus autocomplete="off">
+</form>
+<script>
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+let w,h,particles=[];
+resize();
+window.addEventListener("resize",resize);
+function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
+class Particle{
+  constructor(){
+    this.x=Math.random()*w; this.y=Math.random()*h;
+    this.vx=(Math.random()-.5)*0.6; this.vy=(Math.random()-.5)*0.6; this.r=Math.random()*2+1;
+  }
+  draw(){ ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fillStyle="rgba(0,229,255,.6)"; ctx.fill(); }
+  update(){ this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>w) this.vx*=-1; if(this.y<0||this.y>h) this.vy*=-1; }
+}
+for(let i=0;i<120;i++) particles.push(new Particle());
+let mouse={x:null,y:null};
+window.addEventListener("mousemove",e=>{ mouse.x=e.clientX; mouse.y=e.clientY; });
+function animate(){
+  ctx.clearRect(0,0,w,h);
+  particles.forEach(p=>{
+    p.update(); p.draw();
+    if(mouse.x){
+      const dx=p.x-mouse.x; const dy=p.y-mouse.y; const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<120){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(mouse.x,mouse.y); ctx.strokeStyle="rgba(0,229,255,.15)"; ctx.stroke(); }
+    }
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+window.addEventListener("click",e=>{
+  const r=document.createElement("div"); r.className="ripple";
+  r.style.left=e.clientX+"px"; r.style.top=e.clientY+"px";
+  r.style.width=r.style.height="20px";
+  document.body.appendChild(r); setTimeout(()=>r.remove(),700);
+});
+</script>
+</body>
+</html>

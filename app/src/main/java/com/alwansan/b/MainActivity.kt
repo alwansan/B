@@ -56,6 +56,11 @@ class MainActivity : AppCompatActivity() {
         btnBookmark = findViewById(R.id.btn_bookmark)
         btnMenu = findViewById(R.id.btn_menu)
 
+        // تحسين استجابة الماوس واللمس
+        geckoView.isFocusable = true
+        geckoView.isFocusableInTouchMode = true
+        geckoView.requestFocus()
+
         geckoRuntime = GeckoRuntime.create(this)
         
         val prefs = getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE)
@@ -89,13 +94,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupLocalHomeFile() {
         val file = File(filesDir, HOME_FILE_NAME)
-        if (!file.exists()) {
-            try {
-                assets.open(HOME_FILE_NAME).use { input ->
-                    FileOutputStream(file).use { output -> input.copyTo(output) }
-                }
-            } catch (e: Exception) { e.printStackTrace() }
-        }
+        // نقوم بالكتابة دائماً للتأكد من تحديث الواجهة
+        try {
+            assets.open(HOME_FILE_NAME).use { input ->
+                FileOutputStream(file).use { output -> input.copyTo(output) }
+            }
+        } catch (e: Exception) { e.printStackTrace() }
         homeUrl = "file://" + file.absolutePath
     }
 
@@ -151,6 +155,12 @@ class MainActivity : AppCompatActivity() {
                 newTab.title = finalTitle
                 tabTitleView.text = finalTitle
             }
+            // تمكين النقر بالماوس (Context Menu)
+            override fun onContextMenu(session: GeckoSession, screenX: Int, screenY: Int, meta: GeckoSession.ContentDelegate.ContextElement) {
+                // في النسخ الحديثة يتم التعامل معها تلقائياً، 
+                // لكن وجود الدالة يضمن تفعيل الميزة
+                super.onContextMenu(session, screenX, screenY, meta)
+            }
         }
 
         tabView.setOnClickListener { switchToTab(sessions.indexOf(newTab)) }
@@ -167,6 +177,8 @@ class MainActivity : AppCompatActivity() {
         currentTabIndex = index
         val tab = sessions[index]
         geckoView.setSession(tab.session)
+        // إعادة التركيز للمتصفح عند التبديل
+        geckoView.requestFocus()
 
         for (i in sessions.indices) {
             val view = sessions[i].tabView
@@ -208,6 +220,7 @@ class MainActivity : AppCompatActivity() {
         
         sessions[currentTabIndex].session.loadUri(url)
         addToHistoryLog(url)
+        geckoView.requestFocus()
     }
 
     private fun showBookmarksDialog() {
