@@ -38,6 +38,13 @@ android {
         jvmTarget = '1.8'
     }
     
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+    
     aaptOptions {
         noCompress "tflite", "lite", "tar", "gz", "xz", "so", "ja"
     }
@@ -48,8 +55,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    
-    // مكتبات فك الضغط القوية
     implementation 'org.apache.commons:commons-compress:1.26.0'
     implementation 'org.tukaani:xz:1.9'
 }

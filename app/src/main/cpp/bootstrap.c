@@ -24,10 +24,11 @@ Java_com_example_b_LauncherActivity_startLinux(JNIEnv *env, jobject thiz, jstrin
     sprintf(setup_script, "%s/setup.sh", app_path);
     sprintf(novnc_tar, "%s/novnc.tar.gz", app_path);
 
+    // التأكد من الصلاحيات
     chmod(proot_bin, 0755);
     chmod(setup_script, 0755);
 
-    // نمرر novnc.tar.gz إلى داخل النظام أيضاً
+    // الأمر النهائي
     sprintf(cmd, 
         "%s -S %s "
         "-b /dev -b /proc -b /sys "
