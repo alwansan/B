@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.18.0)
+project("bootstrap")
+add_library(bootstrap SHARED bootstrap.c)
+find_library(log-lib log)
+target_link_libraries(bootstrap ${log-lib})
