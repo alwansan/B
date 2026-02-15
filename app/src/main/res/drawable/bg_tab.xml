@@ -3,13 +3,13 @@
     <item android:state_selected="true">
         <shape>
             <solid android:color="@color/tab_active"/>
-            <corners android:topLeftRadius="12dp" android:topRightRadius="12dp"/>
+            <corners android:topLeftRadius="8dp" android:topRightRadius="8dp"/>
         </shape>
     </item>
     <item>
         <shape>
             <solid android:color="@color/tab_inactive"/>
-            <corners android:topLeftRadius="12dp" android:topRightRadius="12dp"/>
+            <corners android:topLeftRadius="8dp" android:topRightRadius="8dp"/>
         </shape>
     </item>
 </selector>

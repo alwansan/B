@@ -19,7 +19,6 @@
         android:resizeableActivity="true"
         tools:targetApi="31">
         
-        <!-- maxAspectRatio يحل مشكلة الحواف الرمادية في الشاشات الطويلة -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -30,8 +29,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            
-            <!-- دعم الشاشات العريضة جداً -->
+            <!-- هذا السطر يحل مشكلة الحواف الرمادية في الشاشات الطويلة -->
             <meta-data android:name="android.max_aspect" android:value="2.4" />
         </activity>
     </application>

@@ -11,8 +11,8 @@ android {
         applicationId = "com.alwansan.b"
         minSdk = 26
         targetSdk = 34
-        versionCode = 16
-        versionName = "16.0-Fix-Duplicate"
+        versionCode = 17
+        versionName = "17.0-Ultra-Fix"
     }
 
     signingConfigs {

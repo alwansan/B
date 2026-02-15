@@ -3,19 +3,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_main">
+
+    <!-- الواجهة العلوية -->
     <LinearLayout
         android:id="@+id/ui_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@color/bg_secondary"
-        android:elevation="8dp">
+        android:elevation="4dp">
+
+        <!-- شريط التبويبات -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:orientation="horizontal"
-            android:paddingTop="4dp"
-            android:paddingStart="4dp">
+            android:paddingTop="2dp">
+            
             <HorizontalScrollView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -28,68 +32,82 @@
                     android:layout_height="match_parent"
                     android:orientation="horizontal"/>
             </HorizontalScrollView>
+
             <Button
                 android:id="@+id/btn_add_tab"
-                android:layout_width="44dp"
+                android:layout_width="45dp"
                 android:layout_height="match_parent"
                 android:text="+"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@color/accent_neon"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center"/>
         </LinearLayout>
+
+        <!-- شريط العنوان والأدوات -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:gravity="center_vertical"
             android:padding="6dp"
             android:background="@color/bg_secondary">
+            
+            <!-- زر القوائم (مجلد) -->
             <ImageButton
                 android:id="@+id/btn_menu"
-                android:layout_width="40dp"
+                android:layout_width="45dp"
                 android:layout_height="match_parent"
                 android:src="@android:drawable/ic_menu_sort_by_size"
                 android:tint="#AAA"
                 android:background="?attr/selectableItemBackground"/>
+
+            <!-- زر النجمة -->
             <ImageButton
                 android:id="@+id/btn_bookmark"
-                android:layout_width="40dp"
+                android:layout_width="45dp"
                 android:layout_height="match_parent"
                 android:src="@android:drawable/star_off"
                 android:tint="#AAA"
                 android:background="?attr/selectableItemBackground"/>
+
+            <!-- شريط العنوان (إصلاح الشاشة البيضاء) -->
             <EditText
                 android:id="@+id/url_input"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="38dp"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:background="@drawable/bg_url_bar"
-                android:hint="Search or enter address"
+                android:hint="Type URL or search..."
                 android:paddingStart="16dp"
                 android:textColor="#FFF"
                 android:textColorHint="#666"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:singleLine="true"
                 android:inputType="textUri"
                 android:imeOptions="actionGo|flagNoExtractUi"/>
+            
+            <!-- زر GO -->
             <ImageButton
                 android:id="@+id/btn_go"
-                android:layout_width="40dp"
+                android:layout_width="45dp"
                 android:layout_height="match_parent"
                 android:src="@android:drawable/ic_menu_send"
                 android:tint="@color/accent_neon"
                 android:background="?attr/selectableItemBackground"/>
+                
+            <!-- زر الإعدادات (ترس) -->
             <ImageButton
                 android:id="@+id/btn_settings"
-                android:layout_width="40dp"
+                android:layout_width="45dp"
                 android:layout_height="match_parent"
-                android:src="@android:drawable/ic_menu_manage"
+                android:src="@android:drawable/ic_menu_preferences"
                 android:tint="#FFF"
                 android:background="?attr/selectableItemBackground"/>
         </LinearLayout>
     </LinearLayout>
+
     <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"

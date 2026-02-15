@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg_main">#191A24</color>
-    <color name="bg_secondary">#242633</color>
+    <color name="bg_main">#0d0e12</color>
+    <color name="bg_secondary">#181920</color>
     <color name="accent_neon">#00E5FF</color>
     <color name="accent_red">#FA2E4D</color>
     <color name="text_primary">#FFFFFF</color>
-    <color name="tab_active">#242633</color>
-    <color name="tab_inactive">#15161E</color>
-    <!-- تم إضافة هذا اللون لمنع أي أخطاء من ملفات قديمة -->
-    <color name="surface_gray">#242633</color>
+    <color name="tab_active">#1F2029</color>
+    <color name="tab_inactive">#0d0e12</color>
 </resources>

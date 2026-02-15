@@ -16,11 +16,10 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoView
-import org.mozilla.geckoview.WebExtension
-import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
 
@@ -64,20 +63,7 @@ class MainActivity : AppCompatActivity() {
         geckoView.isFocusableInTouchMode = true
         
         geckoRuntime = GeckoRuntime.create(this)
-
-        // 🔒 Disable double tap & pinch zoom at View level
-        geckoView.setOnTouchListener { _, event ->
-            if (event.pointerCount > 1) {
-                true
-            } else {
-                false
-            }
-        }
         
-        
-        // 🔥 تثبيت الإضافات تلقائياً (Extensions) 🔥
-        installBuiltInExtensions()
-
         val prefs = getSharedPreferences("BrowserSettings", Context.MODE_PRIVATE)
         currentResolution = prefs.getString("resolution", "1080") ?: "1080"
 
@@ -95,6 +81,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // منع الشاشة البيضاء عند الكتابة
         urlInput.imeOptions = EditorInfo.IME_ACTION_GO or EditorInfo.IME_FLAG_NO_EXTRACT_UI
         urlInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
@@ -106,22 +93,9 @@ class MainActivity : AppCompatActivity() {
         restoreTabs()
     }
 
-    // 🔥 دالة تثبيت الإضافات من مجلد assets/extensions 🔥
-    private fun installBuiltInExtensions() {
-        try {
-            val extensions = assets.list("extensions") ?: return
-            for (extFile in extensions) {
-                if (extFile.endsWith(".xpi")) {
-                    geckoRuntime.webExtensionController.install(
-                        "resource://android/assets/extensions/$extFile"
-                    )
-                }
-            }
-        } catch (e: Exception) { e.printStackTrace() }
-    }
-
     private fun setupLocalHomeFile() {
         val file = File(filesDir, HOME_FILE_NAME)
+        // نسخ الملف دائماً للتحديث
         try {
             assets.open(HOME_FILE_NAME).use { input ->
                 FileOutputStream(file).use { output -> input.copyTo(output) }
@@ -133,10 +107,7 @@ class MainActivity : AppCompatActivity() {
     private fun addNewTab(urlToLoad: String) {
         val builder = GeckoSessionSettings.Builder()
             .usePrivateMode(false)
-            // 🔥 أهم سطر: هذا يمنع التكبير عند النقر المزدوج (يثبت الشاشة) 🔥
-            .suspendMediaWhenInactive(false)
             
-        // إعدادات الشاشة
         when(currentResolution) {
             "720" -> {
                 builder.viewportMode(GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
@@ -154,20 +125,18 @@ class MainActivity : AppCompatActivity() {
         }
         
         val settings = builder.build()
-        // 🔥 إلغاء التكبير المزدوج المزعج 🔥
-        // Removed invalid USE_DOUBLE_TAP_ZOOM (not supported in Gecko 121+)
-        
         val session = GeckoSession(settings)
         session.open(geckoRuntime)
 
         val tabView = LayoutInflater.from(this).inflate(R.layout.item_tab, tabsContainer, false)
         val tabTitleView = tabView.findViewById<TextView>(R.id.tab_title)
+        val tabIndicator = tabView.findViewById<View>(R.id.tab_indicator)
         val btnClose = tabView.findViewById<ImageButton>(R.id.btn_close_tab)
 
         val newTab = TabSession(session, tabView, urlToLoad)
         sessions.add(newTab)
         
-        // 🔥 تفعيل القوائم المنبثقة (Right Click / Context Menu) 🔥
+        // 🔥 تفعيل القوائم المنبثقة (نسخ/لصق) 🔥
         session.selectionActionDelegate = BasicSelectionActionDelegate(this)
 
         session.progressDelegate = object : GeckoSession.ProgressDelegate {
@@ -207,7 +176,7 @@ class MainActivity : AppCompatActivity() {
         currentTabIndex = index
         val tab = sessions[index]
         geckoView.setSession(tab.session)
-        geckoView.requestFocus() // إعادة التركيز
+        geckoView.requestFocus() 
 
         for (i in sessions.indices) {
             val view = sessions[i].tabView
@@ -240,50 +209,47 @@ class MainActivity : AppCompatActivity() {
         else switchToTab(if (index > 0) index - 1 else 0)
     }
 
-    
+    // 🔥 إصلاح منطق الروابط (Regex-Free Logic) 🔥
     private fun loadUrl(input: String) {
         if (currentTabIndex == -1) return
-
         var url = input.trim()
         if (url.isEmpty()) return
 
-        when {
-            url.contains("://") -> {
-                // already full URL
-            }
+        // 1. هل هو رابط صريح؟
+        val hasScheme = url.startsWith("http://") || 
+                        url.startsWith("https://") || 
+                        url.startsWith("file://") ||
+                        url.startsWith("about:")
 
-            !url.contains(" ") && (url.contains(".") || url.contains(":")) -> {
+        // 2. هل هو لوكال هوست أو آي بي؟
+        val isLocalhost = url.startsWith("localhost") || url.startsWith("127.0.0.1")
+        // فحص بسيط للآي بي (أرقام ونقاط)
+        val isIP = url.replace(".", "").replace(":", "").all { it.isDigit() } && url.contains(".")
+
+        // 3. هل يبدو كدومين؟ (يحتوي نقطة ولا يحتوي مسافة)
+        val isDomain = url.contains(".") && !url.contains(" ")
+
+        when {
+            hasScheme -> { 
+                // الرابط جاهز
+            }
+            isLocalhost || isIP -> {
+                url = "http://$url"
+            }
+            isDomain -> {
                 url = "https://$url"
             }
-
             else -> {
-                url = "https://www.google.com/search?q=" +
-                        java.net.URLEncoder.encode(url, "UTF-8")
+                // بحث جوجل
+                url = "https://www.google.com/search?q=" + URLEncoder.encode(url, "UTF-8")
             }
         }
-
+        
         sessions[currentTabIndex].session.loadUri(url)
         addToHistoryLog(url)
         geckoView.requestFocus()
     }
-     else if (hasSpace) {
-            url = "https://www.google.com/search?q=$url"
-        } else if (looksLikeDomain) {
-            url = "http://$url"
-        } else {
-            url = "https://www.google.com/search?q=$url"
-        }
 
-        addToHistoryLog(url)
-    
-    
-        geckoView.requestFocus()
-    }
-
-    // ==================
-    // 💾 Bookmarks & History & Settings (نفس الكود السابق، يعمل بكفاءة)
-    // ==================
-    
     private fun showBookmarksDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_bookmarks, null)
         val btnBookmarks = dialogView.findViewById<Button>(R.id.btn_view_bookmarks)
@@ -380,12 +346,12 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    // 🔥 وضع الشبح المطور (Immersive Sticky) 🔥
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.isCtrlPressed && event.keyCode == KeyEvent.KEYCODE_G) {
             isGhostMode = !isGhostMode
             if (isGhostMode) {
                 uiContainer.visibility = View.GONE
-                // 🔥 وضع ملء الشاشة الحقيقي (شبح كامل) 🔥
                 window.decorView.systemUiVisibility = (
                         View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
