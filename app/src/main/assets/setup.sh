@@ -1,52 +1,39 @@
 #!/bin/bash
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-export DEBIAN_FRONTEND=noninteractive
 export HOME=/root
 export USER=root
 
-LOG=/opt/status.log
-echo "🚀 Starting Linux Boot..." > $LOG
+# لوج للمتابعة
+LOG=/opt/status.html
+echo "<html><body style='background:black;color:green;font-family:monospace;'>" > $LOG
+echo "<h3>🚀 Linux Boot Started...</h3><pre>" >> $LOG
 
 # 1. إصلاح الشبكة
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
-# 2. تثبيت الحزم (فقط إذا لم تكن موجودة)
+# 2. محاولة التثبيت (مع تجاهل الأخطاء لكي لا يتوقف)
 if [ ! -f "/usr/bin/Xvnc" ]; then
-    echo "📦 Installing Desktop Environment (This may take 10 mins)..." >> $LOG
-    apt-get update
-    apt-get install -y tightvncserver fluxbox xterm libx11-6 libxcomposite1 libxdamage1 libxext6 libxfixes3 libnss3 libnspr4 libasound2 python3 python3-numpy net-tools
+    echo "📦 Installing Packages (Internet Needed)..." >> $LOG
+    apt-get update >> $LOG 2>&1
+    apt-get install -y tightvncserver fluxbox xterm libx11-6 libnss3 libasound2 python3 >> $LOG 2>&1
 fi
 
-# 3. إعداد noVNC (إذا لم يكن مثبتاً)
-if [ ! -d "/opt/novnc" ]; then
-    echo "📦 Extracting noVNC..." >> $LOG
-    mkdir -p /opt/novnc
-    tar -xf /opt/novnc.tar.gz -C /opt/novnc --strip-components=1
-fi
-
-# 4. تنظيف الأقفال القديمة
-rm -rf /tmp/.X1-lock /tmp/.X11-unix/X1
-
-# 5. تشغيل الخدمات
-echo "🖥️ Starting X Server (VNC)..." >> $LOG
-# تشغيل VNC على الشاشة :1
-Xvnc :1 -geometry 1280x720 -depth 24 -rfbport 5901 -SecurityTypes None &
+# 3. تشغيل VNC (الشاشة)
+echo "🖥️ Starting Xvnc..." >> $LOG
+rm -rf /tmp/.X1-lock
+Xvnc :1 -geometry 1280x720 -depth 24 -rfbport 5901 -SecurityTypes None >> $LOG 2>&1 &
 sleep 5
 
-echo "🕸️ Starting noVNC Web Bridge..." >> $LOG
-# تحويل VNC إلى HTML5 على المنفذ 6080
-/opt/novnc/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
-sleep 2
+# 4. تشغيل noVNC (الجسر)
+echo "🕸️ Starting noVNC..." >> $LOG
+/opt/novnc/utils/novnc_proxy --vnc localhost:5901 --listen 6080 >> $LOG 2>&1 &
 
-echo "🪟 Starting Window Manager..." >> $LOG
+# 5. تشغيل Firefox
+echo "🔥 Launching Firefox..." >> $LOG
 export DISPLAY=:1
 fluxbox &
+/opt/firefox/firefox --no-remote --display=:1 --profile /root/.mozilla/firefox/newprofile >> $LOG 2>&1 &
 
-echo "🔥 Launching Firefox..." >> $LOG
-# تشغيل فايرفوكس بملف تعريف جديد لتجنب الأخطاء
-/opt/firefox/firefox --no-remote --display=:1 --profile /root/.mozilla/firefox/newprofile &
-
-echo "✅ SYSTEM READY! Open http://localhost:6080/vnc.html" >> $LOG
-
-# إبقاء الحاوية تعمل
-tail -f $LOG
+echo "</pre><h2 style='color:white;'>✅ READY! Connecting...</h2>" >> $LOG
+# حلقة لا نهائية
+tail -f /dev/null
