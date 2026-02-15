@@ -7,90 +7,85 @@ import android.webkit.WebViewClient
 import android.widget.TextView
 import java.io.*
 import java.util.concurrent.Executors
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
-import java.util.zip.GZIPInputStream
-import android.view.View
 
 class LauncherActivity : Activity() {
 
-    companion object { init { System.loadLibrary("bootstrap") } }
-    external fun startLinux(appPath: String): Int
-
     private lateinit var webView: WebView
     private lateinit var statusText: TextView
-    
+    private val appPath by lazy { filesDir.absolutePath }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        statusText = TextView(this)
-        statusText.text = "📦 Initializing..."
-        statusText.setBackgroundColor(0xFF000000.toInt())
-        statusText.setTextColor(0xFF00FF00.toInt())
-        
-        webView = WebView(this)
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.allowFileAccess = true
-        webView.visibility = View.GONE
-        
         val layout = android.widget.FrameLayout(this)
+        webView = WebView(this).apply {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            visibility = android.view.View.GONE
+        }
+        statusText = TextView(this).apply {
+            text = "🚀 Initializing XoDos-Style Boot..."
+            setTextColor(0xFF00FF00.toInt())
+            setBackgroundColor(0xFF000000.toInt())
+            setPadding(40, 40, 40, 40)
+        }
+        
         layout.addView(webView)
         layout.addView(statusText)
         setContentView(layout)
 
-        val appPath = filesDir.absolutePath
-        val systemDir = File(appPath, "system")
-
         Executors.newSingleThreadExecutor().execute {
             try {
-                if (!File(systemDir, "proot").exists()) {
-                    runOnUiThread { statusText.text = "📦 Extracting System (One Time)..." }
-                    systemDir.mkdirs()
-                    extractTarGz("system.tar.gz", systemDir)
+                // 1. نقل الملفات (إذا لم تكن موجودة)
+                installAsset("system.tar.gz")
+                installAsset("install.sh")
+                installAsset("novnc.tar.gz") // احتياط
+
+                // 2. منح صلاحية التنفيذ للسكربت
+                val installScript = File(appPath, "install.sh")
+                installScript.setExecutable(true)
+
+                // 3. تشغيل السكربت عبر Shell
+                runOnUiThread { statusText.text = "⚙️ Executing Native Installer (Fast)..." }
+                
+                val pb = ProcessBuilder("sh", installScript.absolutePath)
+                pb.directory(filesDir)
+                pb.redirectErrorStream(true)
+                val process = pb.start()
+                
+                // قراءة المخرجات لعرضها
+                val reader = BufferedReader(InputStreamReader(process.inputStream))
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    val log = line
+                    runOnUiThread { statusText.append("\n$log") }
                 }
-                
-                runOnUiThread { statusText.text = "🚀 Launching Linux..." }
-                Executors.newSingleThreadExecutor().execute { startLinux(appPath) }
-                
-                for (i in 15 downTo 1) {
-                    runOnUiThread { statusText.text = "⏳ Waiting... $i" }
-                    Thread.sleep(1000)
-                }
-                
+                process.waitFor()
+
+                // 4. الانتقال للمتصفح
                 runOnUiThread {
-                    statusText.visibility = View.GONE
-                    webView.visibility = View.VISIBLE
+                    statusText.text = "✅ Booting UI..."
+                    statusText.visibility = android.view.View.GONE
+                    webView.visibility = android.view.View.VISIBLE
                     webView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true")
                 }
 
             } catch (e: Exception) {
-                runOnUiThread { statusText.text = "❌ Error: " + e.message }
+                runOnUiThread { statusText.text = "❌ Error: ${e.message}" }
             }
         }
     }
 
-    private fun extractTarGz(asset: String, dest: File) {
-        assets.open(asset).use { ais ->
-            GZIPInputStream(ais).use { gzip ->
-                TarArchiveInputStream(gzip).use { tar ->
-                    var entry: TarArchiveEntry?
-                    while (tar.nextTarEntry.also { entry = it } != null) {
-                        val f = File(dest, entry!!.name)
-                        if (entry!!.isDirectory) f.mkdirs()
-                        else {
-                            f.parentFile?.mkdirs()
-                            FileOutputStream(f).use { out -> tar.copy(out) }
-                        }
-                    }
-                }
+    private fun installAsset(name: String) {
+        val destFile = File(appPath, name)
+        if (destFile.exists()) return // تخطي إذا موجود
+
+        runOnUiThread { statusText.text = "📦 Copying $name..." }
+        
+        assets.open(name).use { input ->
+            FileOutputStream(destFile).use { output ->
+                input.copyTo(output)
             }
         }
-    }
-
-    private fun TarArchiveInputStream.copy(out: OutputStream) {
-        val buf = ByteArray(8192)
-        var len: Int
-        while (read(buf).also { len = it } != -1) out.write(buf, 0, len)
     }
 }
