@@ -2,7 +2,7 @@ package com.example.b
 
 import android.app.Activity
 import android.os.Bundle
-import android.widget.ScrollView
+import android.webkit.WebView
 import android.widget.TextView
 import java.io.*
 import java.util.concurrent.Executors
@@ -17,160 +17,121 @@ class LauncherActivity : Activity() {
     external fun startLinux(appPath: String): Int
 
     private lateinit var logView: TextView
-    private lateinit var scrollView: ScrollView
-
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // واجهة بسيطة لعرض السجلات (Logs)
-        scrollView = ScrollView(this)
+        // 1. واجهة بسيطة لعرض الحالة (سنستبدلها بالمتصفح لاحقاً)
         logView = TextView(this)
-        logView.text = "🚀 B Browser Launcher\nInitializing...\n"
-        logView.setTextColor(0xFF00FF00.toInt()) // Green
-        logView.setBackgroundColor(0xFF000000.toInt()) // Black
-        logView.textSize = 12f
-        logView.setPadding(20, 20, 20, 20)
-        scrollView.addView(logView)
-        setContentView(scrollView)
+        logView.text = "🚀 Preparing Firefox Environment...\n"
+        logView.setTextColor(0xFF00FF00.toInt())
+        logView.setBackgroundColor(0xFF000000.toInt())
+        logView.textSize = 14f
+        logView.setPadding(30, 30, 30, 30)
+        setContentView(logView)
+
+        // 2. مانع الانهيار (Crash Handler)
+        Thread.setDefaultUncaughtExceptionHandler { _, e ->
+            runOnUiThread {
+                logView.append("\n❌ CRASH DETECTED:\n${e.message}\n")
+                e.printStackTrace()
+            }
+        }
 
         val appPath = filesDir.absolutePath
 
         Executors.newSingleThreadExecutor().execute {
             try {
-                // 1. استخراج PRoot
-                extractAsset("proot", File(appPath, "proot"))
+                installAssets(appPath)
                 
-                // 2. استخراج RootFS (tar.gz)
-                if (!File(appPath, "rootfs").exists()) {
-                    log("📦 Extracting RootFS (Ubuntu)...")
-                    extractTarGz("rootfs.tar.gz", File(appPath, "rootfs"))
-                }
-
-                // 3. استخراج Firefox (Double Compression Logic)
-                if (!File(appPath, "firefox").exists()) {
-                    log("🦊 Extracting Firefox (This is huge, wait)...")
-                    extractFirefoxDoubleLayer(appPath)
-                }
-
-                log("✅ System Ready. Starting Engine...")
-                Thread.sleep(1000) // راحة صغيرة
+                log("✅ Assets Ready. Installing Linux Packages (Internet Required)...")
+                log("⚠️ This step needs 5-10 minutes on first run.")
                 
-                // تشغيل المحرك
-                val code = startLinux(appPath)
-                log("🔄 Engine exited with code: $code")
-                log("Check Logcat for 'B_Native' details.")
+                // تشغيل النظام
+                startLinux(appPath)
 
             } catch (e: Exception) {
-                log("❌ CRITICAL ERROR: ${e.message}")
-                e.printStackTrace()
+                log("❌ Error: ${e.message}")
             }
         }
     }
 
     private fun log(msg: String) {
-        runOnUiThread {
-            logView.append("\n$msg")
-            scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+        runOnUiThread { logView.append("\n$msg") }
+    }
+
+    private fun installAssets(appPath: String) {
+        copyAsset("proot", File(appPath, "proot"))
+        copyAsset("setup.sh", File(appPath, "setup.sh"))
+        
+        if (!File(appPath, "rootfs").exists()) {
+            log("📦 Extracting RootFS...")
+            extractTarGz("rootfs.tar.gz", File(appPath, "rootfs"))
+        }
+        
+        if (!File(appPath, "firefox").exists()) {
+            log("🦊 Extracting Firefox...")
+            extractFirefoxDoubleLayer(appPath)
         }
     }
 
-    private fun extractAsset(assetName: String, destFile: File) {
-        if (destFile.exists()) return
-        log("-> Copying $assetName...")
-        assets.open(assetName).use { inp ->
-            FileOutputStream(destFile).use { out -> inp.copyTo(out) }
-        }
+    private fun copyAsset(name: String, dest: File) {
+        if (dest.exists()) return
+        assets.open(name).use { i -> FileOutputStream(dest).use { o -> i.copyTo(o) } }
     }
 
-    // فك ضغط .tar.gz (للـ RootFS)
-    private fun extractTarGz(assetName: String, destDir: File) {
-        destDir.mkdirs()
-        try {
-            val inputStream = GZIPInputStream(assets.open(assetName))
-            val tarInput = TarArchiveInputStream(inputStream)
-            var entry: TarArchiveEntry?
-            while (tarInput.nextTarEntry.also { entry = it } != null) {
-                val outputFile = File(destDir, entry!!.name)
-                if (entry!!.isDirectory) {
-                    outputFile.mkdirs()
-                } else {
-                    outputFile.parentFile?.mkdirs()
-                    FileOutputStream(outputFile).use { out -> tarInput.copy(out, outputFile) }
+    private fun extractTarGz(asset: String, dest: File) {
+        dest.mkdirs()
+        GZIPInputStream(assets.open(asset)).use { gzip ->
+            TarArchiveInputStream(gzip).use { tar ->
+                var entry: TarArchiveEntry?
+                while (tar.nextTarEntry.also { entry = it } != null) {
+                    val f = File(dest, entry!!.name)
+                    if (entry!!.isDirectory) f.mkdirs()
+                    else {
+                        f.parentFile?.mkdirs()
+                        FileOutputStream(f).use { out -> tar.copy(out) }
+                    }
                 }
             }
-        } catch (e: Exception) {
-            log("Error extracting tar.gz: ${e.message}")
-            throw e
         }
     }
-    
-    // دالة مساعدة لنسخ البيانات من TarStream إلى ملف
-    private fun TarArchiveInputStream.copy(out: OutputStream, file: File) {
-        val buffer = ByteArray(8192)
+
+    private fun TarArchiveInputStream.copy(out: OutputStream) {
+        val buf = ByteArray(8192)
         var len: Int
-        while (read(buffer).also { len = it } != -1) {
-            out.write(buffer, 0, len)
-        }
+        while (read(buf).also { len = it } != -1) out.write(buf, 0, len)
     }
 
-    // فك ضغط Firefox المعقد (.tar.xz.tar)
     private fun extractFirefoxDoubleLayer(appPath: String) {
-        val tempTarXz = File(appPath, "firefox_temp.tar.xz")
+        val temp = File(appPath, "temp.txz")
         val finalDir = File(appPath, "firefox")
-        finalDir.mkdirs()
-
-        // الطبقة الأولى: .tar -> .tar.xz
-        log("   Step 1/2: Extracting outer TAR...")
-        val assetStream = assets.open("firefox.tar.xz.tar")
-        val outerTar = TarArchiveInputStream(BufferedInputStream(assetStream))
-        var entry: TarArchiveEntry?
         
-        // نبحث عن ملف firefox...tar.xz داخل الـ Tar الأول
-        var found = false
-        while (outerTar.nextTarEntry.also { entry = it } != null) {
-            if (entry!!.name.endsWith(".tar.xz")) {
-                log("   -> Found inner archive: ${entry!!.name}")
-                FileOutputStream(tempTarXz).use { out -> 
-                    val buffer = ByteArray(32768) // 32KB buffer for speed
-                    var len: Int
-                    while (outerTar.read(buffer).also { len = it } != -1) {
-                        out.write(buffer, 0, len)
-                    }
-                }
-                found = true
-                break
-            }
-        }
-        outerTar.close()
-        
-        if (!found) throw Exception("Inner firefox.tar.xz not found in asset!")
-
-        // الطبقة الثانية: .tar.xz -> Folder
-        log("   Step 2/2: Decompressing XZ & Untarring (Slow)...")
-        val fin = FileInputStream(tempTarXz)
-        val xzIn = XZCompressorInputStream(BufferedInputStream(fin))
-        val innerTar = TarArchiveInputStream(xzIn)
-        
-        while (innerTar.nextTarEntry.also { entry = it } != null) {
-            // إزالة المجلد العلوي إذا وجد (strip first component logic if needed)
-            // هنا سنفترض أن الهيكل هو firefox/file...
-            val outputFile = File(finalDir.parent, entry!!.name) // parent because archive likely contains 'firefox' folder
-            
-            if (entry!!.isDirectory) {
-                outputFile.mkdirs()
-            } else {
-                outputFile.parentFile?.mkdirs()
-                FileOutputStream(outputFile).use { out -> 
-                    val buffer = ByteArray(8192)
-                    var len: Int
-                    while (innerTar.read(buffer).also { len = it } != -1) {
-                        out.write(buffer, 0, len)
+        assets.open("firefox.tar.xz.tar").use { i -> 
+            TarArchiveInputStream(BufferedInputStream(i)).use { tar ->
+                var e: TarArchiveEntry?
+                while (tar.nextTarEntry.also { e = it } != null) {
+                    if (e!!.name.endsWith(".tar.xz")) {
+                        FileOutputStream(temp).use { out -> tar.copy(out) }
+                        break
                     }
                 }
             }
         }
-        innerTar.close()
-        tempTarXz.delete() // تنظيف
-        log("✅ Firefox extracted successfully!")
+        
+        XZCompressorInputStream(BufferedInputStream(FileInputStream(temp))).use { xz ->
+            TarArchiveInputStream(xz).use { tar ->
+                var e: TarArchiveEntry?
+                while (tar.nextTarEntry.also { e = it } != null) {
+                    val f = File(finalDir.parent, e!!.name)
+                    if (e!!.isDirectory) f.mkdirs()
+                    else {
+                        f.parentFile?.mkdirs()
+                        FileOutputStream(f).use { out -> tar.copy(out) }
+                    }
+                }
+            }
+        }
+        temp.delete()
     }
 }
