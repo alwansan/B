@@ -5,12 +5,13 @@ import android.os.Bundle
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.TextView
 import java.io.*
 import java.util.concurrent.Executors
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 import java.util.zip.GZIPInputStream
+import android.view.View
 
 class LauncherActivity : Activity() {
 
@@ -18,9 +19,17 @@ class LauncherActivity : Activity() {
     external fun startLinux(appPath: String): Int
 
     private lateinit var webView: WebView
+    private lateinit var statusText: TextView
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        statusText = TextView(this)
+        statusText.text = "📦 Initializing First Run...\nExtracting System..."
+        statusText.setBackgroundColor(0xFF000000.toInt())
+        statusText.setTextColor(0xFF00FF00.toInt())
+        statusText.textSize = 16f
+        statusText.setPadding(40, 40, 40, 40)
         
         webView = WebView(this)
         webView.settings.javaScriptEnabled = true
@@ -28,116 +37,79 @@ class LauncherActivity : Activity() {
         webView.settings.allowFileAccess = true
         webView.settings.builtInZoomControls = true
         webView.settings.displayZoomControls = false
+        webView.visibility = View.GONE
         
-        setContentView(webView)
+        // حاوية لعرض النصوص أو الويب
+        val layout = android.widget.FrameLayout(this)
+        layout.addView(webView)
+        layout.addView(statusText)
+        setContentView(layout)
 
         val appPath = filesDir.absolutePath
-        val statusFile = File(appPath, "rootfs/opt/status.html")
-
-        // 1. إنشاء ملف الحالة فوراً لتجنب ERR_FILE_NOT_FOUND
-        createInitialStatusPage(statusFile)
-        
-        // 2. تحميل الصفحة المحلية
-        webView.loadUrl("file://" + statusFile.absolutePath)
+        val systemDir = File(appPath, "system")
 
         Executors.newSingleThreadExecutor().execute {
             try {
-                installAssets(appPath)
+                // 1. فك ضغط النظام (مرة واحدة فقط)
+                if (!File(systemDir, "proot").exists()) {
+                    runOnUiThread { statusText.text = "📦 Unpacking System Bundle (Please Wait)..." }
+                    systemDir.mkdirs()
+                    extractTarGz("system.tar.gz", systemDir)
+                }
                 
-                // بدء تشغيل النظام
-                startLinux(appPath)
+                // 2. التشغيل
+                runOnUiThread { statusText.text = "🚀 Launching Linux Environment..." }
+                
+                // تشغيل النواة في الخلفية
+                Executors.newSingleThreadExecutor().execute {
+                    startLinux(appPath)
+                }
+                
+                // 3. الانتظار حتى يجهز السيرفر (30 ثانية)
+                for (i in 15 downTo 1) {
+                    runOnUiThread { statusText.append("\n⏳ Starting Display... $i") }
+                    Thread.sleep(1000)
+                }
+                
+                // 4. عرض المتصفح
+                runOnUiThread {
+                    statusText.visibility = View.GONE
+                    webView.visibility = View.VISIBLE
+                    // noVNC يعمل على المنفذ 6080 (أو VNC المباشر إذا استخدمنا Alpine)
+                    // في init.sh نحن نشغل Xvfb و Fluxbox، ونحتاج noVNC لربطهم بالويب
+                    // إذا لم يكن noVNC مثبتاً في init.sh، قد نحتاج لإضافته
+                    webView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&reconnect=true")
+                }
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                runOnUiThread { statusText.text = "❌ Error: " + e.message + "\n" + e.stackTraceToString() }
             }
         }
     }
 
-    private fun createInitialStatusPage(file: File) {
-        file.parentFile?.mkdirs()
-        try {
-            // نستخدم دمج النصوص لتجنب أخطاء بايثون
-            val html = "<html><body style='background:black;color:white;padding:20px;font-family:monospace;'>" +
-                       "<h2>🚀 System Initializing...</h2>" +
-                       "<p>Please wait while we unpack the system resources.</p>" +
-                       "<script>setInterval(function(){window.location.reload();}, 3000);</script>" +
-                       "</body></html>"
-            
-            FileOutputStream(file).use { it.write(html.toByteArray()) }
-        } catch (e: Exception) { e.printStackTrace() }
-    }
-
-    private fun installAssets(appPath: String) {
-        copyAsset("proot", File(appPath, "proot"))
-        copyAsset("setup.sh", File(appPath, "setup.sh"))
-        copyAsset("novnc.tar.gz", File(appPath, "novnc.tar.gz"))
-        
-        if (!File(appPath, "rootfs").exists()) {
-            extractTarXz("rootfs.tar.xz", File(appPath, "rootfs"))
-        }
-        
-        if (!File(appPath, "firefox").exists()) {
-            extractFirefoxDoubleLayer(appPath)
-        }
-    }
-    
-    private fun copyAsset(name: String, dest: File) {
-        if (dest.exists()) return
-        assets.open(name).use { i -> FileOutputStream(dest).use { o -> i.copyTo(o) } }
-    }
-    
-    private fun extractTarXz(asset: String, dest: File) {
-        dest.mkdirs()
-        XZCompressorInputStream(assets.open(asset)).use { xz ->
-            TarArchiveInputStream(xz).use { tar ->
-                var entry: TarArchiveEntry?
-                while (tar.nextTarEntry.also { entry = it } != null) {
-                    val f = File(dest, entry!!.name)
-                    if (entry!!.isDirectory) f.mkdirs()
-                    else {
-                        f.parentFile?.mkdirs()
-                        FileOutputStream(f).use { out -> tar.copy(out) }
-                    }
-                }
-            }
-        }
-    }
-    
-    private fun TarArchiveInputStream.copy(out: OutputStream) {
-        val buf = ByteArray(8192)
-        var len: Int
-        while (read(buf).also { len = it } != -1) out.write(buf, 0, len)
-    }
-
-    private fun extractFirefoxDoubleLayer(appPath: String) {
-        val temp = File(appPath, "temp.txz")
-        val finalDir = File(appPath, "firefox")
-        try {
-            assets.open("firefox.tar.xz.tar").use { i -> 
-                TarArchiveInputStream(BufferedInputStream(i)).use { tar ->
-                    var e: TarArchiveEntry?
-                    while (tar.nextTarEntry.also { e = it } != null) {
-                        if (e!!.name.endsWith(".tar.xz")) {
-                            FileOutputStream(temp).use { out -> tar.copy(out) }
-                            break
-                        }
-                    }
-                }
-            }
-            XZCompressorInputStream(BufferedInputStream(FileInputStream(temp))).use { xz ->
-                TarArchiveInputStream(xz).use { tar ->
-                    var e: TarArchiveEntry?
-                    while (tar.nextTarEntry.also { e = it } != null) {
-                        val f = File(finalDir.parent, e!!.name)
-                        if (e!!.isDirectory) f.mkdirs()
-                        else {
+    private fun extractTarGz(asset: String, dest: File) {
+        // نستخدم GZIP + Tar لفك الضغط
+        assets.open(asset).use { ais ->
+            GZIPInputStream(ais).use { gzip ->
+                TarArchiveInputStream(gzip).use { tar ->
+                    var entry: TarArchiveEntry?
+                    while (tar.nextTarEntry.also { entry = it } != null) {
+                        val f = File(dest, entry!!.name)
+                        if (entry!!.isDirectory) {
+                            f.mkdirs()
+                        } else {
                             f.parentFile?.mkdirs()
                             FileOutputStream(f).use { out -> tar.copy(out) }
                         }
                     }
                 }
             }
-            temp.delete()
-        } catch (e: Exception) {}
+        }
+    }
+
+    private fun TarArchiveInputStream.copy(out: OutputStream) {
+        val buf = ByteArray(8192)
+        var len: Int
+        while (read(buf).also { len = it } != -1) out.write(buf, 0, len)
     }
 }
