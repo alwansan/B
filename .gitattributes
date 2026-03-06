@@ -1,3 +1,5 @@
-# No LFS — all files committed directly
-*.tar.xz -text
-*.part*  -text
+*.zip.part* binary
+*.tar.xz*   binary
+*.jar       binary
+*.png       binary
+*.so*       binary
