@@ -1,84 +1,89 @@
-#!/data/data/com.firefoxpc.app/files/usr/bin/bash
-# ============================================================
-# setup.sh — First Launch Setup
-# يُشغَّل مرة واحدة فقط عند أول فتح للتطبيق
-# ============================================================
+#!/bin/bash
+# setup.sh — First-time Ubuntu setup
 
-SETUP_DONE="/data/data/com.firefoxpc.app/files/home/.setup_complete"
-HOME_DIR="/data/data/com.firefoxpc.app/files/home"
-PREFIX="/data/data/com.firefoxpc.app/files/usr"
-SYSTEM_PARTS_DIR="$HOME_DIR/assets/system"
-PROOT_ROOTFS="$PREFIX/var/lib/proot-distro/installed-rootfs"
-LOG="$HOME_DIR/setup.log"
+LOGF="/storage/emulated/0/Download/FirefoxPC_Logs/setup.log"
+mkdir -p "$(dirname "$LOGF")" 2>/dev/null || LOGF="$HOME/setup.log"
+SETUP_DONE="$HOME/.setup_complete"
 
-log() { echo "[$(date '+%H:%M:%S')] $1" | tee -a "$LOG"; }
+L() { echo "[$(date +%T)] $1" | tee -a "$LOGF" 2>/dev/null; }
 
-# إذا الإعداد منجز، شغّل Firefox مباشرة
-if [ -f "$SETUP_DONE" ]; then
-  log "Setup already done. Launching..."
-  exec "$HOME_DIR/scripts/start.sh"
-  exit 0
-fi
+L "====== setup.sh start ======"
+L "HOME=$HOME  PREFIX=$PREFIX"
+L "bash=$(which bash 2>/dev/null || echo MISSING)"
+L "proot-distro=$(which proot-distro 2>/dev/null || echo MISSING)"
+L "Already done file: $([ -f $SETUP_DONE ] && echo YES || echo NO)"
 
-mkdir -p "$HOME_DIR/scripts" "$HOME_DIR/assets/system"
-log "🚀 First launch setup starting..."
+[ -f "$SETUP_DONE" ] && { L "Already done. Starting..."; exec "$HOME/scripts/start.sh"; }
 
-# --- 1. تثبيت الحزم المطلوبة ---
-log "📦 Installing required packages..."
+# تثبيت الحزم المطلوبة
+L "--- Updating packages ---"
+pkg update -y >> "$LOGF" 2>&1 && L "pkg update OK" || L "pkg update failed (non-fatal)"
 
 for pkg in x11-repo tur-repo; do
-  pkg install "$pkg" -y 2>>"$LOG" || true
+    pkg install -y "$pkg" >> "$LOGF" 2>&1
+    L "  $pkg: installed"
 done
 
-apt-get update -y 2>>"$LOG" || true
+pkg update -y >> "$LOGF" 2>&1
 
-for pkg in termux-x11-nightly pulseaudio proot-distro wget git; do
-  if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null 2>&1; then
-    log "  Installing $pkg..."
-    pkg install "$pkg" -y 2>>"$LOG" || \
-    apt-get install -y "$pkg" 2>>"$LOG" || \
-    log "  ⚠️ Could not install $pkg"
-  else
-    log "  ✅ $pkg already present"
-  fi
+for pkg in termux-x11-nightly pulseaudio proot-distro; do
+    if command -v "$pkg" > /dev/null 2>&1; then
+        L "  ✓ $pkg (already installed)"
+    else
+        L "  Installing: $pkg ..."
+        pkg install -y "$pkg" >> "$LOGF" 2>&1
+        L "  $pkg exit=$?"
+    fi
 done
 
-# --- 2. استعادة نظام Ubuntu ---
-log "🐧 Restoring Ubuntu system..."
+# تجميع أجزاء النظام
+L "--- Assembling Ubuntu archive ---"
+SYS_DIR="$HOME/assets/system"
+FULL="$HOME/ubuntu_full.tar.xz"
 
-if [ ! -d "$PROOT_ROOTFS/ubuntu" ]; then
-  FULL_ARCHIVE="/tmp/ubuntu_system.tar.xz"
-
-  # تجميع الأجزاء المقسّمة
-  if ls "$SYSTEM_PARTS_DIR"/system.tar.xz.part* &>/dev/null 2>&1; then
-    log "  Reassembling split archive..."
-    cat "$SYSTEM_PARTS_DIR"/system.tar.xz.part* > "$FULL_ARCHIVE"
-    log "  ✅ Archive ready ($(du -sh "$FULL_ARCHIVE" | cut -f1))"
-  elif [ -f "$SYSTEM_PARTS_DIR/system.tar.xz" ]; then
-    cp "$SYSTEM_PARTS_DIR/system.tar.xz" "$FULL_ARCHIVE"
-  else
-    log "  ❌ No system archive found!"
-    exit 1
-  fi
-
-  log "  Restoring (this takes 2-4 minutes)..."
-  proot-distro restore "$FULL_ARCHIVE" 2>>"$LOG" || {
-    log "  Fallback: manual extraction..."
-    mkdir -p "$PROOT_ROOTFS/ubuntu"
-    tar -xJf "$FULL_ARCHIVE" -C "$PROOT_ROOTFS/ubuntu" 2>>"$LOG"
-  }
-
-  rm -f "$FULL_ARCHIVE"
-  log "  ✅ Ubuntu restored!"
+if [ -f "$FULL" ]; then
+    L "Archive already assembled: $(du -sh $FULL | cut -f1)"
+elif ls "$SYS_DIR"/system.tar.xz.part* > /dev/null 2>&1; then
+    COUNT=$(ls "$SYS_DIR"/system.tar.xz.part* | wc -l)
+    L "Joining $COUNT parts..."
+    cat "$SYS_DIR"/system.tar.xz.part* > "$FULL"
+    L "Joined: $(du -sh $FULL | cut -f1)"
+elif [ -f "$SYS_DIR/system.tar.xz" ]; then
+    ln -sf "$SYS_DIR/system.tar.xz" "$FULL"
+    L "Using single archive"
 else
-  log "  ✅ Ubuntu already installed"
+    L "ERROR: No system archive found in $SYS_DIR"
+    ls -la "$SYS_DIR" >> "$LOGF" 2>&1
+    exit 1
 fi
 
-# --- 3. نسخ سكريبت التشغيل ---
-cp "$HOME_DIR/assets/scripts/start.sh" "$HOME_DIR/scripts/start.sh"
-chmod +x "$HOME_DIR/scripts/start.sh"
+# استعادة Ubuntu
+L "--- Restoring Ubuntu ---"
+ROOTFS="$PREFIX/var/lib/proot-distro/installed-rootfs"
+L "ROOTFS: $ROOTFS"
+L "Ubuntu exists: $([ -d $ROOTFS/ubuntu ] && echo YES || echo NO)"
 
-# --- اكتمل الإعداد ---
+if [ ! -d "$ROOTFS/ubuntu" ]; then
+    L "Running proot-distro restore..."
+    proot-distro restore "$FULL" >> "$LOGF" 2>&1
+    RC=$?
+    L "proot-distro restore exit=$RC"
+
+    if [ $RC -ne 0 ] || [ ! -d "$ROOTFS/ubuntu" ]; then
+        L "Fallback: manual tar extract..."
+        mkdir -p "$ROOTFS/ubuntu"
+        tar -xJf "$FULL" -C "$ROOTFS/ubuntu" >> "$LOGF" 2>&1
+        L "tar exit=$?"
+    fi
+else
+    L "Ubuntu already installed: $(du -sh $ROOTFS/ubuntu | cut -f1)"
+fi
+
+[ -d "$ROOTFS/ubuntu" ] && L "✅ Ubuntu OK" || { L "❌ Ubuntu MISSING!"; exit 1; }
+
+# حذف الأرشيف لتوفير المساحة
+rm -f "$FULL" 2>/dev/null
+
 touch "$SETUP_DONE"
-log "✅ Setup complete! Starting Firefox..."
-exec "$HOME_DIR/scripts/start.sh"
+L "====== setup.sh DONE ======"
+exec "$HOME/scripts/start.sh"
