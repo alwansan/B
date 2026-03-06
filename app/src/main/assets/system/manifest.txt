@@ -1,0 +1,11 @@
+parts=9
+md5=833c4cb28984877c663b26c6e86e68bc
+system.tar.xz.partaa
+system.tar.xz.partab
+system.tar.xz.partac
+system.tar.xz.partad
+system.tar.xz.partae
+system.tar.xz.partaf
+system.tar.xz.partag
+system.tar.xz.partah
+system.tar.xz.partai

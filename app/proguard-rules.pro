@@ -1,0 +1,2 @@
+-keep class com.firefoxpc.app.** { *; }
+-dontwarn **

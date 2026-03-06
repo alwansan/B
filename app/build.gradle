@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.firefoxpc.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.firefoxpc.app"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+        ndk { abiFilters 'arm64-v8a' }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // Do NOT compress these — they are read as raw bytes
+    aaptOptions {
+        noCompress "xz", "tar", "gz", "part"
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
