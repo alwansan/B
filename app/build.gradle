@@ -25,6 +25,7 @@ android {
     }
 
     aaptOptions {
+        // لا تضغط هذه الأنواع — مهم لـ assets الكبيرة
         noCompress "xz", "tar", "gz", "zip", "part", "so"
     }
 }
