@@ -12,17 +12,17 @@ BASE_DIR     = "/storage/emulated/0/Download/Games/py/B"
 PROJECT_DIR  = os.path.join(BASE_DIR, "FirefoxPC")
 ASSETS_DIR   = os.path.join(PROJECT_DIR, "app/src/main/assets")
 RES_DIR      = os.path.join(PROJECT_DIR, "app/src/main/res")
-SYSTEM_SRC   = os.path.join(BASE_DIR, "system.tar.xz")       # الملف المُصدَّر
+SYSTEM_SRC   = os.path.join(BASE_DIR, "system.tar.xz")
 SYSTEM_DEST  = os.path.join(ASSETS_DIR, "system")
 ICON_SRC     = os.path.join(BASE_DIR, "icon.png")
-SPLIT_MB     = 50
-REPO_URL     = "https://github.com/alwansan/B"   # ← غيّر هذا
+SPLIT_MB     = 45       # أصغر من 50MB لضمان قبول GitHub (حد 100MB لكل ملف)
+REPO_URL     = "https://github.com/alwansan/B"
 # ───────────────────────────────────────────────────────────
 
 def sh(cmd, check=True):
     print(f"  ▶ {cmd}")
-    return subprocess.run(cmd, shell=True, check=check, text=True,
-                          capture_output=False)
+    result = subprocess.run(cmd, shell=True, check=check, text=True)
+    return result
 
 def write(path, content):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -41,25 +41,39 @@ def md5(path):
 def split_system():
     print("\n📦 Step 1: Split system archive")
     if not os.path.exists(SYSTEM_SRC):
-        print(f"  ⚠️  لم يُعثر على {SYSTEM_SRC}")
-        print("  → شغّل أولاً: proot-distro backup ubuntu --output system.tar.xz")
+        print(f"  ⚠️  لم يُعثر على system.tar.xz")
+        print(f"  → شغّل: proot-distro backup ubuntu --output {SYSTEM_SRC}")
         return False
 
-    # حذف الأجزاء القديمة
     os.makedirs(SYSTEM_DEST, exist_ok=True)
+
+    # حذف الأجزاء القديمة
     for f in os.listdir(SYSTEM_DEST):
         if "system.tar.xz" in f or f == "manifest.txt":
             os.remove(os.path.join(SYSTEM_DEST, f))
+            print(f"  🗑 Removed old: {f}")
 
     size_mb = os.path.getsize(SYSTEM_SRC) / 1024 / 1024
-    print(f"  حجم الأرشيف: {size_mb:.0f} MB")
+    print(f"  📏 حجم الأرشيف: {size_mb:.0f} MB")
 
+    # تقسيم — بدون LFS، مباشرة كملفات عادية
     sh(f'split -b {SPLIT_MB}M "{SYSTEM_SRC}" "{SYSTEM_DEST}/system.tar.xz.part"')
 
     parts = sorted(f for f in os.listdir(SYSTEM_DEST)
                    if f.startswith("system.tar.xz.part"))
+
+    # تحقق أن كل جزء < 100MB (حد GitHub)
+    for p in parts:
+        size = os.path.getsize(os.path.join(SYSTEM_DEST, p)) / 1024 / 1024
+        if size > 99:
+            print(f"  ❌ {p} حجمه {size:.0f}MB — يتجاوز حد GitHub 100MB!")
+            print("  → قلّل SPLIT_MB إلى 40 وأعد التشغيل")
+            return False
+        print(f"  ✅ {p} ({size:.0f}MB)")
+
     print(f"  ✅ {len(parts)} أجزاء × {SPLIT_MB}MB")
 
+    # كتابة ملف manifest
     with open(os.path.join(SYSTEM_DEST, "manifest.txt"), "w") as mf:
         mf.write(f"parts={len(parts)}\n")
         mf.write(f"md5={md5(SYSTEM_SRC)}\n")
@@ -79,28 +93,48 @@ def copy_icon():
         shutil.copy2(ICON_SRC, os.path.join(dest, "ic_launcher.png"))
         print(f"  ✅ {density}")
 
-# ── 3. Git push ─────────────────────────────────────────────
-def git_push():
-    print("\n🚀 Step 3: Push to GitHub")
+# ── 3. إزالة LFS من الريبو إذا كان مُفعّلاً ───────────────
+def remove_lfs():
+    print("\n🔧 Step 3: Disable Git LFS (fix GitHub error)")
     os.chdir(PROJECT_DIR)
+    sh("git lfs uninstall", check=False)
+
+    # إعادة كتابة .gitattributes بدون LFS
+    gitattr = os.path.join(PROJECT_DIR, ".gitattributes")
+    with open(gitattr, "w") as f:
+        f.write("# No LFS — all files committed directly\n")
+        f.write("*.tar.xz -text\n")
+        f.write("*.part*  -text\n")
+    print("  ✅ .gitattributes updated (no LFS)")
+
+    # إزالة تتبع LFS من الملفات
+    sh("git rm -r --cached . 2>/dev/null || true", check=False)
+
+# ── 4. Git push ─────────────────────────────────────────────
+def git_push():
+    print("\n🚀 Step 4: Push to GitHub")
+    os.chdir(PROJECT_DIR)
+
     if not os.path.exists(".git"):
         sh("git init")
         sh(f"git remote add origin {REPO_URL}")
-    # تفعيل LFS للملفات الكبيرة
-    sh("git lfs install", check=False)
-    sh("git lfs track '*.part*'", check=False)
-    sh("git lfs track '*.tar.xz'", check=False)
+    else:
+        # تأكد أن remote صحيح
+        sh(f"git remote set-url origin {REPO_URL}", check=False)
 
-    sh("git add .")
-    sh('git commit -m "build: update Firefox PC"', check=False)
+    # تأكد أن LFS غير مُفعّل
+    sh("git lfs uninstall 2>/dev/null || true", check=False)
+
+    sh("git add -A")
+    sh('git commit -m "fix: remove LFS, embed system parts directly"', check=False)
     sh("git push -u -f origin main")
     print(f"\n  🔗 تابع البناء: {REPO_URL}/actions")
 
 # ── Main ────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("=" * 50)
-    print("  Firefox PC — APK Builder")
-    print("=" * 50)
+    print("=" * 55)
+    print("  Firefox PC — APK Builder (LFS-free)")
+    print("=" * 55)
 
     if not os.path.isdir(PROJECT_DIR):
         print(f"❌ مجلد المشروع غير موجود: {PROJECT_DIR}")
@@ -108,8 +142,9 @@ if __name__ == "__main__":
 
     split_system()
     copy_icon()
+    remove_lfs()
     git_push()
 
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 55)
     print("✅ تم! سيتم بناء APK على GitHub Actions.")
-    print("=" * 50)
+    print("=" * 55)
