@@ -3,18 +3,16 @@ name: Build APK
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    permissions:
+      contents: write
 
     steps:
-
-    - name: Checkout Code
+    - name: Checkout
       uses: actions/checkout@v4
       with:
         lfs: false
@@ -25,67 +23,27 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # تحميل Gradle مباشرة بدون الاعتماد على wrapper
-    - name: Download Gradle 8.4
+    - name: Fix gradlew
       run: |
-        wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip -O /tmp/gradle.zip
-        unzip -q /tmp/gradle.zip -d /opt/gradle
-        echo "/opt/gradle/gradle-8.4/bin" >> $GITHUB_PATH
-
-    # إصلاح gradle-wrapper.jar إذا لم يكن موجوداً
-    - name: Fix Gradle Wrapper
-      run: |
-        mkdir -p gradle/wrapper
-        if [ ! -f gradle/wrapper/gradle-wrapper.jar ] || [ ! -s gradle/wrapper/gradle-wrapper.jar ]; then
-          echo "Downloading gradle-wrapper.jar..."
-          wget -q "https://raw.githubusercontent.com/google/iosched/main/gradle/wrapper/gradle-wrapper.jar" \
-            -O gradle/wrapper/gradle-wrapper.jar || \
-          wget -q "https://raw.githubusercontent.com/android/sunflower/main/gradle/wrapper/gradle-wrapper.jar" \
-            -O gradle/wrapper/gradle-wrapper.jar
-        fi
-        ls -lh gradle/wrapper/
         chmod +x gradlew
+        mkdir -p gradle/wrapper
+        if [ ! -s gradle/wrapper/gradle-wrapper.jar ]; then
+          curl -sL https://raw.githubusercontent.com/google/iosched/main/gradle/wrapper/gradle-wrapper.jar \
+               -o gradle/wrapper/gradle-wrapper.jar
+          echo "gradle-wrapper.jar downloaded"
+        fi
 
-    - name: Check Project Structure
-      run: |
-        echo "=== Key Files ==="
-        ls -la
-        echo "=== Assets ==="
-        ls -lh app/src/main/assets/scripts/ 2>/dev/null || echo "No scripts dir"
-        echo "=== System Parts ==="
-        ls -lh app/src/main/assets/system/ 2>/dev/null | head -15 || echo "No system dir"
-        echo "=== Icons ==="
-        find app/src/main/res -name "*.png" 2>/dev/null | head -8
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.4'
 
     - name: Build Debug APK
-      run: |
-        gradle assembleDebug --no-daemon --stacktrace 2>&1
-      env:
-        ANDROID_HOME: /usr/local/lib/android/sdk
-        GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx3g -Dorg.gradle.daemon=false"
-
-    - name: Show APK info
-      run: |
-        find . -name "*.apk" -exec ls -lh {} \;
+      run: ./gradlew assembleDebug --no-daemon --stacktrace
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: FirefoxPC-Debug-APK
+        name: FirefoxPC-debug-${{ github.run_number }}
         path: app/build/outputs/apk/debug/app-debug.apk
-        compression-level: 0
         if-no-files-found: error
-
-    - name: Create Release
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: "build-${{ github.run_number }}"
-        name: "Firefox PC Build ${{ github.run_number }}"
-        body: |
-          ## Firefox PC APK
-          حمّل APK من الأسفل.
-          أول تشغيل يستغرق 3-4 دقائق.
-        files: app/build/outputs/apk/debug/app-debug.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
