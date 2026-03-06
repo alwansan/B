@@ -1,4 +1,7 @@
-// Top-level build file
-plugins {
-    id 'com.android.application' version '8.2.2' apply false
+// Top-level build file — DO NOT add allprojects{} here
+// repositories are in settings.gradle → dependencyResolutionManagement
+buildscript {
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
 }
