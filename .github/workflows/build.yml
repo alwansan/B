@@ -26,14 +26,25 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Fix gradlew
+    - name: Make gradlew executable
       run: chmod +x gradlew
 
-    - name: Build Debug APK
-      env:
-        GRADLE_OPTS: "-Xmx2g -Dorg.gradle.daemon=false"
+    - name: Download gradle-wrapper.jar if missing
       run: |
-        ./gradlew assembleDebug --no-daemon --no-build-cache 2>&1
+        JAR=gradle/wrapper/gradle-wrapper.jar
+        if [ ! -s "$JAR" ]; then
+          echo "Downloading gradle-wrapper.jar..."
+          curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+               -o "$JAR" || \
+          curl -sL "https://services.gradle.org/distributions/gradle-8.4-wrapper.jar" \
+               -o "$JAR"
+          ls -la "$JAR"
+        else
+          echo "gradle-wrapper.jar exists: $(ls -la $JAR)"
+        fi
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
